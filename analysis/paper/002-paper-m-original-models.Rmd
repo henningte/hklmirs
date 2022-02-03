@@ -1,0 +1,70 @@
+```{r m-original-models-prep}
+## extract the peak heights
+d_res_path <- "../data/derived_data/d_peaks"
+dir.create(d_res_path)
+
+# extract scaled normalized peak heights from MIRS
+res <- 
+  hklmirs::hkl_get_normalized_peak_heights(
+    x = d_flat,
+    export = d_res_path,
+    verbose = FALSE,
+    make_plots = FALSE,
+    do_scale = TRUE
+  )
+
+# extract information on scaling for prediction for new datasets
+res_scale <- 
+  tibble::tibble(
+    name = colnames(res),
+    center = purrr::map_dbl(res, attr, which = "scaled:center"),
+    scale = purrr::map_dbl(res, attr, which = "scaled:scale")
+  )
+
+# add peak info to d
+d <- dplyr::bind_cols(d, res %>% purrr::map_df(as.numeric))
+```
+
+```{r m-original-models-models}
+# compute the regression models
+m1.1 <- lm(hol ~ carb, 
+         data = d %>% dplyr::filter(sample_type != "old magazines"))
+m2.1 <- lm(kl ~ arom15arom16, 
+         data = d %>% dplyr::filter(sample_type != "office paper"))
+```
+
+```{r m-original-models-or-bayesian}
+## compute the original regression models as Bayesian models
+
+# define priors
+rstanarm_prior <- rstanarm::normal(0, 2.5, autoscale = TRUE)
+rstanarm_prior_aux <- rstanarm::exponential(1, autoscale = TRUE)
+
+# compute models
+m1.2 <- rstanarm::stan_glm(hol ~ carb, 
+                          data = d %>% dplyr::filter(sample_type != "old magazines"),
+                          family = gaussian,
+                          chains = chains,
+                          iter = iter,
+                          warmup = warmup,
+                          seed = seed,
+                          prior = rstanarm_prior,
+                          prior_intercept = rstanarm_prior,
+                          prior_aux = rstanarm_prior_aux)
+m2.2 <- rstanarm::stan_glm(kl ~ arom15arom16, 
+                          data = d %>% dplyr::filter(sample_type != "office paper"),
+                          family = gaussian,
+                          chains = chains,
+                          iter = iter,
+                          warmup = warmup,
+                          seed = seed,
+                          prior = rstanarm_prior,
+                          prior_intercept = rstanarm_prior,
+                          prior_aux = rstanarm_prior_aux)
+
+# compute loos
+m1.2_loo <- loo(m1.2, 
+                k_threshold = k_threshold)
+m2.2_loo <- loo(m2.2, 
+                k_threshold = k_threshold)
+```

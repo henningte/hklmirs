@@ -1,0 +1,427 @@
+---
+title: "Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid Infrared Spectra"
+journal: "`r rticles::copernicus_journal_abbreviations(journal_name = 'soil')`"
+author:
+  - given_name: Henning
+    surname: Teickner
+    email: henning.teickner@uni-muenster.de
+    affiliation: 1
+  - given_name: Klaus-Holger
+    surname: Knorr
+    email: kh.knorr@uni-muenster.de
+    affiliation: 1
+# If you have more than one corresponding author, add them manually using the following structure (note the commas):
+# Two authors: Daniel Nüst (daniel.nuest@uni-muenster.de) and Josiah Carberry (j.carberry@orcid.org)
+# Three authors or more: Daniel Nüst (daniel.nuest@uni-muenster.de), Josiah Carberry (j.carberry@orcid.org), and Markus Konkol (m.konkol@wwu.de)
+# If the following line is uncommented, the "corresponding: true" above are ignored
+correspongdingauthors: Henning Teickner (henning.teickner@uni-muenster.de)
+# If an author is deceased, please mark the respective author name(s) with a dagger '†' and add a further affiliation; put the decease date in the 'address' field", see 'Nikolaus Copernicus' in template.
+# If authors contributed equally, please mark the respective author names with an asterisk '*' and add a further affiliation: 'These authors contributed equally to this work.'", see template.
+affiliation:
+  - code: 1
+    address: ILÖK, Ecohydrology and Biogeochemistry Group, University of Münster, Heisenbergstr. 2, 48149 Münster, Germany
+abstract:  |
+    To understand global soil organic matter (SOM) chemistry and its dynamics, we need tools to efficiently quantify SOM properties, for example prediction models using mid infrared spectra. All the advantages of such models rely on their critical validation. Recently, \cite{Hodgkins.2018} developed models to predict organic matter holocellulose and Klason lignin contents, two indicators of SOM stability and major compounds of organic matter in general. The models can be used to understand large-scale SOM gradients and have been used in various studies.  
+    A research gap to fill is that these models have not been validated in detail yet. What are their limitations and how can we improve them? This study provides a validation with the aim to identify concrete steps to improve the models. As a first step, we provide several improvements using the original training data.  
+    The major limitation we identified is that the original training data are not representative for a range of peat samples which causes both biased estimates and extrapolation uncertainty under the original models. In addition, the original models can in parctice produce unrealistic predictions (negative values or values $>100$ mass-%). Our improved models partly reduce the observed bias, have a better predictive performance for the training data, and avoid unrealistic predictions. Finally, we provide a proof-of-concept that holocellulose contents can also be predicted for mineral-rich samples.  
+    A key step to improve the models will be to collect training data that is representative for SOM formed under various conditions. This study opens directions to develop operational models to predict SOM holocellulose and Klason lignin contents from mid infrared spectra.
+running:
+  title: Improving Models to Predict Holocellulose and Klason Lignin Contents
+  author: Teickner et al.
+# This section is mandatory even if you declare that no competing interests are present.
+competinginterests: |
+  The authors declare that they have no conflict of interest.
+# See https://publications.copernicus.org/for_authors/licence_and_copyright.html, normally used for transferring the copyright, if needed. 
+# Note: additional copyright statements for affiliated software or data need to be placed in the data availability section.
+#copyrightstatement: |
+#  The author's copyright for this publication is transferred to institution/company. 
+### The following commands are for the statements about the availability of data sets and/or software code corresponding to the manuscript.
+### It is strongly recommended to make use of these sections in case data sets and/or software code have been part of your research the article is based on.
+### Note: unless stated otherwise, software and data affiliated with the manuscript are assumed to be published under the same licence as the article (currently Creative Commons 4.0)
+availability:
+  #code: |
+  #  use this to add a statement when having only software code available
+  #data: |
+  #  use this to add a statement when having only data sets available
+  #sample: |
+  #  use this section when having geoscientific samples available
+  codedata: |
+    Data and code to reproduce our analyzes are available via [---todo: add link].
+#videosupplement: |
+#  use this section when having video supplements available
+authorcontribution: |
+  HT (Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data Curation, Writing - Original Draft, Visualization); KH (Resources, Writing - Review & Editing, Supervision, Funding acquisition)
+#disclaimer: |
+#  We like Copernicus.
+acknowledgements: |
+  We like to thank @Hodgkins.2018 and @DelaCruz.2016 for provision of data and code to reproduce and modify their analyses, and @Allaire.2020 for provision of an Rmarkdown template. We thank Suzanne Hodgkins and Jeff Chanton for constructive discussions.
+#appendix: |
+date: "`r Sys.Date()`"
+output: 
+  bookdown::pdf_book:
+    base_format: rticles::copernicus_article
+    keep_tex: true
+    citation_package: natbib
+bibliography: references
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align = "center", 
+                      fig.pos = "H")
+```
+
+```{r packages, echo=FALSE, include=FALSE}
+# packages
+library(ggplot2)
+library(ir)
+library(irpeat)
+library(caret)
+library(magrittr)
+library(dplyr)
+library(rstanarm)
+library(brms)
+library(loo)
+library(projpred)
+library(bayesplot)
+library(patchwork)
+library(ggrepel)
+library(scales)
+library(bib2df)
+library(kableExtra)
+library(purrr)
+library(stringr)
+library(tidyr)
+```
+
+```{r options-plot, echo=FALSE}
+# plot theme
+ggplot2::theme_set(ggplot2::theme_classic() + 
+                     ggplot2::theme(strip.background = ggplot2::element_rect(fill = "lightgrey", colour = NA)))
+
+# table print options
+options(knitr.table.format = "latex")
+```
+
+\introduction[Introduction]
+
+Understanding soil organic matter chemistry and how it changes is important to understand future global carbon dynamics. The chemistry of soil organic matter (SOM) controls how fast it can be decomposed [@Bengtsson.2018; @Shipley.2021]. To understand and predict these processes, we therefore need to measure SOM chemistry on a global scale. A challenge is that soils develop under diverse and changing environmental conditions which also affect SOM quality [@Scharlemann.2014; @Lehmann.2015]. As a consequence spatially and temporally resolved measurements on a global scale are needed. For this, we need methods to measure SOM chemistry efficiently.  
+Mid infrared spectra (MIRS)-based models to predict SOM properties are a promising high-throughput approach which can replace more labor intensive or costly measurements [@ViscarraRossel.2006]. For example, MIRS have been used to predict elemental contents which otherwise are measured using e.g. combustion and gas chromatographic analysis of resulting gases. All the advantages of MIRS-based models rely on the accuracy of the computed models. This makes model validation a crucial step during model development.  
+OM derived from plants and SOM is often characterized by step-wise chemical fractionation into holocellulose (acid soluble) --- a proxy for polysaccharides --- and lignin (acid insoluble) --- a proxy for aromatics --- [@DelaCruz.2016; @Elle.2019] and these variables are often important indicators for the chemical quality of OM in studies and models analyzing decomposition of SOM [@Leifeld.2012; @Biester.2014; @Worrall.2017; @Hodgkins.2018; @Bengtsson.2018; @Agren.1996a; @Bauer.2004; @Shipley.2021]. If these fractions can be predicted from MIRS, it may be possible to understand decomposition across larger scales and at higher spatial resolution.  
+Several models to predict holocellulose and lignin contents in different OM types have been developed (some based on near infrared spectra) [summarized for lignin by @Elle.2019; for holocellulose see e.g. @Peltre.2011; @Sun.2011]. Most of these models consider only wood, material from few species, or specific vegetation organs [@Elle.2019]. Another problem is that most of these models cannot be easily reproduced and used since the raw data has not been published.  
+Recently, @Hodgkins.2018 developed models to predict Klason lignin and holocellulose contents from attenuated total reflectance MIRS. The models have several advantages over existing approaches. The training data comprises several different OM types, such as paper products (cardboard, office paper, magazines, newspaper), leaves from diverse species (trees and graminoids), and wood samples [@DelaCruz.2016; @Hodgkins.2018]. Moreover, both raw data and model code are publicly available [@Hodgkins.2018; @Teickner.2020a]. For this reason, the models are particularly suitable for application in other studies [@Teickner.2019; @Moore.2019; @Harris.2020; @Cong.2020], most recently in @Verbeke.2022, and for future developments, e.g. by including additional data.   
+A problem is that neither @Hodgkins.2018, nor a later study using the models provided a thorough model validation. To compute the models, the authors developed a procedure to extract peaks which are indicative for specific OM fractions, such as holocellulose and Klason lignin (Fig. \@ref(fig:hodgkins-peaks-sample)), from the MIRS. The peaks are baseline corrected, their maximum height computed and divided by the sum of absorbance values in the spectra. These values are used to calibrate the prediction models. As model validation, only the linearity between the target variables and predictors was assessed (supplementary material to @Hodgkins.2018), but not for example how predicted values match measured values. Moreover, no information has been provided if the training data is representative for SOM, particularly the peat samples analyzed in the study. Similarly, it is unclear if pre-selecting peaks may reduce the predictive accuracy of the models. Many of these concerns have also been raised by an anonymous reviewer of the paper (supplementary information to @Hodgkins.2018). Thus, an important research gap to fill is to validate the models and to provide concrete strategies for further improvements.
+
+```{r hodgkins-peaks-sample, echo=FALSE, out.width="70%", fig.height=2.5, fig.width=6, fig.cap="Sample spectrum with the peaks and troughs, their heights, and their baselines (green) as detected by the script developed by \\cite{Hodgkins.2018}. The plot was created with the data and code from \\cite{Hodgkins.2018} as implemented in ir and irpeat, respectively."}
+seed <- 1
+temp <- 
+  ir::ir_sample_data[36, ] %>% 
+  ir::ir_bc(method = "rubberband") %>%
+  ir::ir_normalise(method = "area") %>%
+  irpeat:::irp_content_klh_hodgkins_prepare() %>%
+  hklmirs::hkl_hodgkins_ggplot()
+temp[[1]] +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+Our goals are to identify limitations of the original models and to give concrete recommendations for improvements. Moreover, we use the original data from @Hodgkins.2018 to provide improvements where possible. To this end, we conducted an exploratory analysis using the peat and peat-forming vegetation data provided by @Hodgkins.2018. Our exploratory analysis was guided by the following research questions: 
+
+1. _Is the normal distribution reasonable to predict holocellulose and Klason lignin contents for peat samples?_ Klason lignin and holocellulose contents as actually measured for the training data set in @Hodgkins.2018 cannot be negative or larger than 100 mass-%. For this reason, predictions and prediction uncertainties of the models should be in the interval [0, 100] mass-%. Yet, the original models assume a normal distribution which does not entail any lower or upper bound for predicted values. This can potentially result in unrealistic predictions. However, if no unrealistic predictions occur for "representative" peat samples, using a model with normal distribution can be justifiable in practice due the central limit theorem. In contrast, if unrealistic predictions occur, it is more reasonable to use a distribution which assumptions are in accordance with knowledge on the data generating process. For example, the beta distribution assumes a lower and upper bound which can be mapped to the interval [0, 100] mass-%. For this reason, we were interested if and under which conditions the original models may produce unrealistic predictions for the peat and vegetation samples. 
+
+2. _Can the predictive accuracy of the models be improved?_ The original models were parameterized with manually selected variables (normalized peak heights from the extraction procedure) [@Hodgkins.2018]: the peak `carb` (~1090 cm$^{-1}$) for holocellulose and the sum of the peaks `arom15` (~1515 cm$^{-1}$) and `arom16` (~1650 cm$^{-1}$) (`arom15arom16`) for Klason lignin. Whilst there is both a strong causal rationale behind this decision and it may support the robustness of the models [@Hodgkins.2018], it is also under risk of underfitting --- excluding informative variables and thus missing an opportunity to improve predictive accuracy. For this reason, we were interested if including more variables extracted from the MIRS results in models with a better predictive accuracy.
+
+3. _Is the prediction domain of the training data representative for peat samples?_ If a model extrapolates outside the range of predictor variable values in the training data set, it is unclear if the predictions are valid, for instance because it cannot be evaluated if there is bias. An advantage of the independent reference sample set used by @Hodgkins.2018 is that the model is applicable on various OM types and e.g. no problem-specific correlations are used by the models to make predictions [@Hodgkins.2018]. For example, in peat, holocellulose content is controlled by decomposition, and other structures also controlled by decomposition might therefore provide information on holocellulose contents [@Leifeld.2012; @Biester.2014]. But this does not have to be the case for other samples, e.g. peat forming vegetation. An advantage is therefore the generality of the training data set @Hodgkins.2018 used. However, since it does not include peat samples, it is questionable if the prediction domain formed by the training samples covers peat samples and peat forming vegetation in general, and this can result in overlooking prediction failures due to extrapolation. For this reason, we were interested if the training data (its predictions domain, @Wadoux.2021) is representative for peat and peat forming vegetation.
+
+4. _Do predictions of the improved models differ and if so, why?_ Computing modified models enables us to compare their predictions to those of the original models using the same training data, and to the actually measured contents. Model comparison often reveals detailed insights into the mechanics of a model and may provide hints to which model makes more correct predictions. We therefore were interested in analyzing differences between the models computed, what factors may cause differences in predictions, and if there are indications which models make more correct predictions. 
+
+5. _Can holocellulose contents also be predicted for samples with mineral interferences?_ During model calibration, @Hodgkins.2018 omitted some samples. For prediction of holocellulose, old magazine samples were omitted because the `carb` peak suffered from mineral interference from the samples' clay coatings [@Hodgkins.2018]. This decision is sensible, but since there are many organic soils with mineral admixtures --- for example due to volcanic ash, in base layers, or due to cryoturbation) [e.g. @Broder.2012; @Bockheim.2007; @Koven.2009; @Loisel.2014] --- we think that it is useful to have a model to predict holocellulose contents also for mineral rich samples. We therefore wanted to investigate if a suitable model can be computed by including the previously omitted old magazine samples during calibration.
+
+In investigating these issues, our main goals are to provide a concrete plan for how to improve the original models. Moreover, we want to analyze under which conditions it may not be appropriate to use the original or modified models. Where possible using the original data, we want to provide improved models which we hope can be further improved in the future. In addition, this study provides general guidance for pitfalls during validation of spectral prediction models. With this, we want to contribute to the development of models to predict SOM holocellulose and Klason lignin contents which are important to provide diverse data to fit SOM decomposition models and to understand how environmental change affects global soil carbon dynamics.
+
+
+# Methods
+
+```{r opts, echo=FALSE}
+# define global parameter values
+k_threshold <- 0.7
+seed <- 1
+iter <- 4000
+warmup <- iter %/% 2
+chains <- 4
+```
+
+
+```{r data-import, echo=FALSE}
+### load and preprocess the data
+
+## training data
+
+# get training data as ir object
+d <- 
+  ir::ir_sample_data %>%
+  ir::ir_bc(method = "rubberband") %>%
+  ir::ir_normalise(method = "area") %>%
+  dplyr::mutate(
+    hol = units::drop_units(holocellulose),
+    kl = units::drop_units(klason_lignin)
+  )
+
+# flatten
+d_flat <- irpeat:::irp_content_klh_hodgkins_prepare(d)
+
+## data for peat samples
+d_peat <- 
+  list("../../inst/extdata/sample_mir.csv") %>%
+  ir::ir_import_csv(sample_id = "from_colnames") %>%
+  dplyr::left_join(
+    read.csv("../../inst/extdata/sample_data.csv", header = TRUE), 
+    by = "sample_id"
+  ) %>%
+  dplyr::arrange(core_label, sample_depth_lower)
+
+# preprocessing
+d_peat <-
+  d_peat %>%
+  ir::ir_bc(method = "rubberband") %>%
+  ir::ir_normalise(method = "area")
+
+## data for vegetation samples
+d_veg <- 
+  list("../../inst/extdata/Hodgkins_vegetation_mirs.csv") %>%
+  ir::ir_import_csv(sample_id = "from_colnames") %>%
+  dplyr::left_join(
+    read.csv("../../inst/extdata/Hodgkins_vegetation_sample_info.csv", header = TRUE) %>%
+      dplyr::rename(sample_id = "sample_name"), 
+    by = "sample_id"
+  )
+
+# preprocessing
+d_veg <-
+  d_veg %>%
+  ir::ir_bc(method = "rubberband") %>%
+  ir::ir_normalise(method = "area")
+```
+
+Our aim is to provide a validation of the original models of @Hodgkins.2018 and concrete suggestions for improvements. To this end, we conducted a series of statistical analyzes to query each of our research questions listed in the introduction. During this, we also computed improved models using the same training data that was used to compute the original models. Since we used these improved models to uncover and analyze the limitations of the original models, we first describe steps how we improved the original models and then how we analyzed the limitations.  
+We use the data and models collected and developed by @Hodgkins.2018. The training data used to calibrate the original models consist of various organic materials and comprise measured values for holocellulose and Klason lignin [@DelaCruz.2016]. The data are available via @Hodgkins.2018. In addition, we used a data set consisting of MIRS for `r length(unique(d_peat$core_label))` peat cores (`r nrow(d_peat)` samples in total) and `r nrow(d_veg)` vegetation samples collected at the same sites which are also provided by @Hodgkins.2018. We used these peat and vegetation data to evaluate the performance of the original and improved models for peat and peat forming vegetation in general. We assume that the peat samples are representative for a wide range of SOM because they cover a large latitudinal range and a wide range of degrees of decomposition, and were formed by different vegetation [@Hodgkins.2018].  
+We computed all models as Bayesian models. This allowed us to consider parameter uncertainty in predictions and to compute models with good predictive performance [@Raftery.2003; @Piironen.2017]. For this reason, we also recomputed the original models as Bayesian models with weakly informative priors to facilitate model comparison using the same metrics and tools. Whenever we refer to "original model", we mean these Bayesian translations, and otherwise refer to "original non-Bayesian models". To show that we did not introduce any of the identified weaknesses using the Bayesian approach, we compared the predictions of the Bayesian models to the original non-Bayesian models (supplementary Fig. 1<!---\@ref(fig:res-p-pred-diff-hol-intensity2)--->).  
+All analyzes were performed in R (`r R.Version()$version.string %>% stringr::str_remove("^R ") %>% stringr::str_remove("\\)") %>% stringr::str_replace(" \\(", ", ")`) [@RCoreTeam.2020]. Spectra were preprocessed using ir (`r packageVersion("ir")`) [@Teickner.2020]. The original script used by @Hodgkins.2018 to extract peaks (\url{https://github.com/shodgkins/FTIRbaselines}) as implemented in irpeat (`r packageVersion("irpeat")`) [@Teickner.2020a] was used to recompute the original models and extract peaks from MIRS. Bayesian models were computed using rstanarm (`r packageVersion("rstanarm")`) [@Goodrich.2020] and brms (`r packageVersion("brms")`) [@Burkner.2017; @Burkner.2018] which are interfaces to Stan (`r rstan::stan_version()`) [@StanDevelopmentTeam.2020; @StanDevelopmentTeam.2021]. All predictor variables were $z$-transformed. MCMC sampling was validated in addition using bayesplot (`r packageVersion("bayesplot")`) [@Gabry.2020]. The out-of-sample predictive performance of the models was estimated using the expected log predictive density (ELPD) estimated using Pareto smoothed importance sampling-leave-one-out cross-validation (PSIS-LOO) [@Vehtari.2017] using the loo package (`r packageVersion("loo")`) [@Vehtari.2019]. PSIS-LOO ELPD is an universal measure to compare the predictive performance of models and $-2 \cdot \text{PSIS-LOO ELPD}$ is the deviance [@Vehtari.2017].
+
+	
+```{r m-original-models-child, child="002-paper-m-original-models.Rmd", cache=TRUE, include=FALSE}
+# get results from child document
+```
+
+## Normal versus beta regression models
+
+Above, we mentioned that assuming a model with normal distribution can result in unrealistic predictions outside the interval [0, 100] mass-%. We were interested if and under which conditions unrealistic predictions can occur. Here, we differentiate two ways in which a prediction can be unrealistic: It can be an unrealistic point estimate (median predictions), and the prediction interval can cover values outside [0, 100] mass-%, even though the median prediction can be in [0, 100] mass-%.  
+For our analysis, we first computed a sequence of normalized `carb` and `arom15arom16` peak heights such that the original model predict values completely covering the interval [0, 100] mass-% for holocellulose and Klason lignin, respectively. For these simulated peak heights, we computed median model predictions and 90% prediction intervals using the original models ("original Gaussian models"). Finally, we identified unrealistic predictions in terms of the point estimates and 90% prediction intervals, and the `carb` and `arom15arom16` peak heights under which these occur. We used these values as thresholds to decide if the models make unrealistic predictions in practice. To relate these values to real data, we computed median predictions and 90% prediction intervals also for the peat and vegetation samples and identified unrealistic predictions as for the simulation analysis.  
+After identifying conditions under which unrealistic predictions occur, we compared this to the behavior of a model with assumptions in line with the data generating process. Beta regression models assume all values of the dependent variable to be in (0,100) mass-% which is a reasonable assumption given how the actual data is generated. Therefore, we repeated the previous analyses, but now using beta regression models. We used the same model structure and priors for intercept and slopes as the original models ("original beta models").  
+To facilitate practical comparison between the modeling approaches, we compared the predictions of all models in the form of depth profiles of the holocellulose and Klason lignin contents. Altogether, this allowed us to identify unrealistic predictions of the original models, and to analyze how the improved models (beta regression models) perform in comparison.
+
+```{r m-gaussian-beta-child, child="003-paper-m-gaussian-beta.Rmd", cache=TRUE, include=FALSE}
+# get results from child document
+```
+
+
+## Reducing underfitting with more variables
+
+The original approach of @Hodgkins.2018 was to include only manually selected variables which may result in underfitting and consequently relatively low predictive accuracy. We wanted to investigate if the predictive accuracy can be improved by including more variables in the models. Two approaches with complementary advantages and disadvantages were tested:
+
+1. We used all peak heights and trough heights returned by the peak identification algorithm of @Hodgkins.2018 (Fig. \@ref(fig:hodgkins-peaks-sample)). The advantage is that this makes the prediction model probably more robust against calibration transfer issues in comparison to the second approach (a hypothesis that remains to be tested). The disadvantage is that additional information contained within the spectra cannot be fully exploited if these are not contained within the extracted peak heights. To avoid overfitting, we computed models using priors implying different amount of regularization for model coefficients (standard deviation of 1 and 0.5, respectively) in addition to the default weakly informative prior which we derived from rstanarm (`r packageVersion("rstanarm")`) (standard deviation of 2.5) [@Goodrich.2020].  
+
+2. We used all variables in the spectra and Bayesian regularization [@Piironen.2020], similar to [@Teickner.2022]. The advantage is that this approach can more fully exploit the information contained within the spectra because it is not restricted to specific peaks, resulting potentially in a better predictive performance. The disadvantage is that this approach may be more prone to calibration transfer issues. To reduce redundancy in the variables and impact of noise, we binned the spectra, testing bin widths of 10, 20, 30, 50, and 100 cm$^{-1}$. As regularizing priors, we used the regularized horseshoe prior with a parameterization as described in @Piironen.2017b, assuming a number of relevant variables of eight.  
+
+Out-of-sample model performance was estimated with PSIS-LOO ELPD as described above [@Vehtari.2017; @Vehtari.2019]. If a model has a larger PSIS-LOO ELPD than another model fitted on the same data, it has a larger (leave-one-out cross-validation) predictive accuracy, so models with larger PSIS-LOO ELPD are preferred [@Vehtari.2017]. To compare models, one typically computes the posterior distribution of the difference in PSIS-LOO ELPD between the model with the largest PSIS-LOO ELPD and the other models, such that one can evaluate the probability of a certain predictive advantage of the best model in comparison to the other models [@Vehtari.2017; @Vehtari.2019].  
+To further validate and interpret the models using binned spectra, we visually identified the most important bins (largest absolute median coefficients $\ge0.2$) and linked these to molecular structures and causal relations that most probably result in the correlation with holocellulose and Klason lignin, respectively.  
+ 
+```{r m-reduce-underfitting-child, child="004-paper-m-reduce-underfitting.Rmd", cache=TRUE, include=FALSE}
+# get results from child document
+```
+
+
+## Assessing the prediction domain of the training data
+
+Is the training data used to compute the models representative for the spectral properties of peat and peat forming vegetation? To answer this question, we needed to compare the spectral properties of the training samples to those of the peat and vegetation samples [@Wadoux.2021]: If for a sample the value of a spectral variable included in a model exceeds the range of values for the same variable in the training data, the model extrapolates if applied on the sample [@Wadoux.2021]. If extrapolation occurs, it is unclear if the predictions are valid estimates for holocellulose and Klason lignin contents.  
+For the original models, the prediction domain is simply the range of area normalized heights of the `carb` and `arom15arom16` peak, respectively [@Hodgkins.2018]. Therefore, we could directly compare the area normalized heights of the `carb` and `arom15arom16` peak of the peat and vegetation samples to the range of area normalized heights of the same peaks for the training data.  
+For the improved models using binned spectra, the predictor variables represent a multivariate prediction domain. We therefore created plots with which we could compare the value ranges for each bin for the training data with the respective values in the peat and vegetation spectra. This allowed us to identify for which spectral variables extrapolation is an issue. Finally, by identifying the most important variables in the improved models, we could qualitatively summarize how large the risk of this extrapolation is.  
+We did not additionally investigate the prediction domain for the models using all extracted peaks and troughs since these models had no predictive advantage in comparison to the models using binned spectra.
+
+
+## Analyzing differences in predictions between the original models and the improved models 
+We analyzed how predictions of the improved models (best model for each of the two approaches) differ from the original models. We found considerable differences, even within the spectral range of the training data and therefore analyzed what factors probably cause these differences.  
+In a first step, we were interested if the original or improved models are biased. @Hodgkins.2018 provide no plot of residuals against predicted values or measured values against predicted values. Both plots are commonly used to detect any biases in a model fit [e.g. @Pineiro.2008]. We therefore created such plots for the original model and the improved model and compared indication of bias between both.  
+In a second step, we compared how predictions of both models differ in practice. To this end, we compared predictions of both for the peat and vegetation data from @Hodgkins.2018, similarly to how we compared the Gaussian and beta regression models. Since we found considerable differences, we conducted a more targeted exploratory analysis to identify factors probably causing these differences. 
+
+
+## Predicting holocellulose contents in samples with mineral admixtures
+
+In the introduction we mentioned that the original @Hodgkins.2018 model for holocellulose excluded training samples with admixtures of clay minerals (old magazine samples) since these interfere with the `carb` peak. By including more variables into the model than the `carb` peak (as described in the previous section), we tried to compute models that can also describe the holocellulose content in the training data samples with high clay content. For this, we fitted the best models for holocellulose from each of the two approaches described in the previous section again (binned spectra: `r loo_comparison_hol$bin_width[[1]]` cm$^{-1}$ bin width; extracted peaks: priors with standard deviation =`r loo_comparison_hol$prior_scale[loo_comparison_hol$variables == "peaks"][[1]]`), but this time including the four old magazine samples previously left out. We interpreted the coefficients of these binned models similarly to the versions not fitted with mineral rich samples.
+
+```{r m-minerals-child, child="005-paper-m-minerals.Rmd", cache=TRUE, include=FALSE}
+# get results from child document
+```
+
+```{r m-prediction-domain-child, child="006-paper-m-prediction-domain.Rmd", cache=TRUE, include=FALSE}
+# get results from child document
+```
+
+```{r m-prediction-differences-child, child="007-paper-m-prediction-differences.Rmd", cache=TRUE, include=FALSE}
+# get results from child document
+```
+
+# Results and discussion
+
+## Is the normal distribution reasonable to predict holocellulose and Klason lignin contents for peat samples?
+
+The original model for holocellulose produced unrealistic predictions: It had a negative point prediction for one strongly decomposed sample from a tropical peat core. Moreover, for `r d_peat_pred %>% dplyr::filter(variable_y == "Holocellulose" & model == "Gaussian, Bayesian") %>% dplyr::mutate(negative = lwr < 0) %>% dplyr::summarise(negative = sum(negative)/length(negative)) %>% dplyr::pull(negative) %>% magrittr::multiply_by(100) %>% round(0)`% of the peat samples in the data from @Hodgkins.2018, the lower 90% prediction interval covered negative values (supplementary Fig. 3<!---\@ref(fig:res-p-gaussian-beta-depth-profile)--->). No point prediction or 90% prediction interval was $>100$ mass-%. The original model for Klason lignin did not produce unrealistic predictions for the peat samples (supplementary Fig. 3<!---\@ref(fig:res-p-gaussian-beta-depth-profile)--->). Both models did not produce unrealistic predictions for the vegetation samples.   
+Figure \@ref(fig:res-p-gaussian-beta-range) shows predicted medians and prediction intervals for both models across a potential range of the spectral predictor variables alongside the range covered by the peat and vegetation samples. The model with normal distribution produces negative lower prediction interval limits whenever the predicted median is lower than around `r d_range_pred_limits %>% dplyr::filter(variable_y == "Holocellulose" & variable_limit == "fit_lwr") %>% dplyr::pull(fit) %>% magrittr::multiply_by(100) %>% round(0)` mass-% and upper prediction interval limits $>100$ mass-% whenever the predicted median is larger than around `r d_range_pred_limits %>% dplyr::filter(variable_y == "Holocellulose" & variable_limit == "fit_upr") %>% dplyr::pull(fit) %>% magrittr::multiply_by(100) %>% round(0)` mass-%. For Klason lignin these values are around `r d_range_pred_limits %>% dplyr::filter(variable_y == "Klason lignin" & variable_limit == "fit_lwr") %>% dplyr::pull(fit) %>% magrittr::multiply_by(100) %>% round(0)` and `r d_range_pred_limits %>% dplyr::filter(variable_y == "Klason lignin" & variable_limit == "fit_upr") %>% dplyr::pull(fit) %>% magrittr::multiply_by(100) %>% round(0)` mass-%, respectively.  
+The beta regression models produce realistic predictions across the complete range of the spectral predictor variables. In addition, the beta regression model has smaller prediction uncertainties for extreme values (Fig. \@ref(fig:res-p-gaussian-beta-range)). A consequence of this are larger predicted holocellulose contents with narrower prediction intervals for several (decomposed) peat samples under the beta regression model in comparison to the original normal model (Fig. \@ref(fig:res-p-gaussian-beta-range) and supplementary Fig. 3<!---\@ref(fig:res-p-gaussian-beta-depth-profile)--->).  
+Thus, whereas our results indicate little differences in choosing a model distribution for Klason lignin, for holocellulose contents of peat samples it is crucial to use a beta regression model to avoid unrealistic predictions. Nevertheless, it is generally advisable to use a beta regression model for mass contents. It may not be known in advance how large holocellulose or Klason lignin contents are for a given sample. And even for Klason lignin, contents may be low, e.g. due to high contents of minerals.
+
+```{r res-p-gaussian-beta-range, warning=FALSE, echo=FALSE, out.width="70%", fig.height=3.5, fig.width=6.5, fig.cap="Predicted Holocellulose (a) and Klason lignin (b) contents using either the original Gaussian models or a beta regression model, versus predicitons of the original Gaussian model covering the entire interval [0, 100] mass-\\%. Coloured lines within shaded regions are median predictions. Shaded areas and boundaries are 90\\% prediction intervals. Coloured points are median point predictions for the peat (round points) and vegetation (crosses) samples from \\cite{Hodgkins.2018}. Colors differentiate predictions of the original Gaussian model (blue) and the model with beta distribution (red). White filled points indicate the fitted values for which the 90\\% prediction interval of the Gaussian model contains unrealistic values. Dashed grey lines represent the limit for realistic point predictions."}
+p_gaussian_beta_range
+```
+
+
+## Can the predictive accuracy of the models be improved?
+
+Our analysis shows that both strategies to include more variables result on average in more accurate predictions. If uncertainties for the estimated predictive accuracy are considered, the advantage is clear only for the models for holocellulose using binned spectra (Table \@ref(tab:res-tab-loo-comparison-res)), but not for Klason lignin. Consequently, using the data available, we could improve the model for holocellulose, but our analysis remains inconclusive with respect to Klason lignin.  
+Is one of the strategies to include more variables advantageous? The on average overall best models, according to their PSIS-LOO ELPD, were those using binned spectra with bin widths of `r loo_comparison_hol$bin_width[[1]]` and `r loo_comparison_kl$bin_width[[1]]` for holocellulose and Klason lignin, respectively (Table \@ref(tab:res-tab-loo-comparison-res)). For Klason lignin, comparatively large prediction uncertainties result in the practical equivalence of both strategies. For holocellulose, using binned spectra (except bin width = 20) is more clearly better than using the extracted peaks. Summarized, this indicates that using binned spectra results in an improved predictive accuracy over the second approach to use all extracted peaks for holocellulose, whereas our validation remains inconclusive with respect to Klason lignin.  
+To interpret the improved models using binned spectra, we plotted the median coefficients for the best models using binned spectra (Fig. \@ref(fig:res-p-coefficients)). From this plot, we identified the bins with the largest absolute median coefficients ($\ge0.2$, marked with points and labeled). The reason for the (on average) improved performance is that the improved models can use information contained in the complete spectra which is not contained in the manually selected peaks for the original models:  
+Similarly to the original model, a variable near the `carb` peak is important to predict the holocellulose content (bin at ~950 cm$^{-1}$) since it is related to cellulose [@Cocozza.2003; @Stuart.2004; @Artz.2008], but two peaks related to aromatic structures are also important (~1200 cm$^{-1}$: C-O stretching in phenols and aromatic ethers [@Stuart.2004; @Kubo.2005]. ~1250 cm$^{-1}$: aromatic in plane C-H bending) [@Stuart.2004] (Fig. \@ref(fig:res-p-coefficients), first panel). This indicates that aromatics provide information on the holocellulose content in the training samples. A plausible explanation is that holocellulose and Klason lignin together are the major mass fractions in many OM types and both are controlled by the same processes, but often in different directions (decomposition, resource allocation trade-off during plant growth, selective removal during processing) [@Biester.2014; @Chen.2016] (supporting Fig. 4<!---\@ref(fig:res-sup-kl-hol)--->).   
+For Klason lignin, the improved model does not use bins near to the `arom15` and `arom16` peaks, in contrast to the original model. Instead bins with large absolute coefficients are located in the fingerprint region and probably related to aromatic in plane C-H bending (~1270 and ~1160 cm$^{-1}$) [@Stuart.2004] (Fig. \@ref(fig:res-p-coefficients), last panel). We have no explanation why one coefficient is negative and the other positive. In section "What causes differences in predictions?", we provide a mechanistic interpretation for why the selected variables are important. 
+
+```{r res-tab-loo-comparison-res, echo=FALSE}
+loo_comparison_res[[1]] <- 
+  loo_comparison_res[[1]] %>%
+  stringr::str_replace("\\\\toprule", "\\\\tophline") %>%
+  stringr::str_replace("\\\\midrule", "\\\\middlehline") %>%
+  stringr::str_replace("\\\\bottomrule", "\\\\bottomhline") %>%
+  stringr::str_replace_all("\\\\addlinespace.+\\n", "") %>%
+  stringr::str_remove_all("\\\\hspace\\{1em\\}") %>%
+  stringr::str_replace_all("m1\\.", "\\\\hspace\\{1em\\}m1\\.") %>%
+  stringr::str_replace_all("m2\\.", "\\\\hspace\\{1em\\}m2\\.")
+loo_comparison_res
+```
+
+\clearpage
+
+```{r res-p-coefficients, echo=FALSE, out.width="90%", fig.height=3, fig.width=6.5, fig.cap='Coefficients of the best models using binned spectra for Holocellulose (first two panels, model trained without and with samples containing minerals, respectively) and Klason lignin (last panel), plotted against the average wavenumber of the bins. Points are median coefficient estimates, error bars are 90\\% posterior intervals. Points with an absolute median coefficient $\\ge 0.2$ are labeled with the respective average wavenumber value. The grey shaded region is a reference spectrum.'}
+p_coefficients
+```
+
+
+## Is the prediction domain of the training data representative for peat samples?
+
+The training data set does not cover the range of the spectral variables relevant for predicting peat and peat forming vegetation holocellulose contents (Fig. \@ref(fig:res-p-prediction-domain) A and B). For the original models, the training data `carb` and `arom15arom16` peak heights cover the range of the vegetation samples. However, few peat samples have larger `arom15arom16` and many peat samples have smaller `carb` peak heights than covered by the training data. This suggests that the original models extrapolate to predict holocellulose contents in peat samples with small holocellulose contents and Klason lignin contents in peat samples with large Klason lignin contents.  
+The same is true for the improved models using binned spectra (Fig. \@ref(fig:res-p-prediction-domain) C and D). Even though it is not possible to establish a direct relation between extrapolation for individual spectral variables and predicted contents, it is visible that for several bins, peat samples --- and to a lesser extent --- vegetation samples have mostly larger standardized predictor values than covered by the training data set. This is also true for bins with the largest absolute median coefficients (including the model for holocellulose fitted with mineral-rich samples; see section "Can holocellulose contents also be predicted for samples with mineral interferences?" below).  
+Under what conditions does extrapolation occur? Samples with small `carb` peak, or for the binned spectra, large absorbance at ~`r m_pars %>% dplyr::filter(abs(median) >= 0.02 & variable_y == "Holocellulose (with minerals)") %>% dplyr::pull(wn) %>% sort() %>% knitr::combine_words()` cm$^{-1}$, are outside the prediction domain for holocellulose (Fig. \@ref(fig:res-p-prediction-domain)). Since the `carb` peak is small and absorbance at the selected wavenumbers is typically large in decomposed samples [@Cocozza.2003; @Tfaily.2014; @Hodgkins.2018] (and the respective coefficients are negative), this indicates that for holocellulose, extrapolation occurs mainly for more decomposed peat. 
+This is also true for Klason lignin since extrapolation occurs for samples with large `arom15arom16` peak, or for the binned spectra, large absorbance at ~`r m_pars %>% dplyr::filter(abs(median) >= 0.02 & variable_y == "Klason lignin") %>% dplyr::pull(wn) %>% sort() %>% knitr::combine_words()` cm$^{-1}$, all of which are larger for more decomposed peat [@Cocozza.2003; @Tfaily.2014; @Hodgkins.2018].  
+Overall, this indicates that the prediction domain formed by the training data does not cover peat --- particularly decomposed peat --- and partly peat forming vegetation samples. This is probably also true for non-peat SOM. Therefore the models' prediction can represent extrapolations in practice.
+
+```{r res-p-prediction-domain, echo=FALSE, out.width="40%", fig.height=7, fig.width=4, fig.cap='Prediction domain for the original models (a, b), and the improved models using binned spectra (c, d). The prediction domain is the range of values covered by the predictor variables. The original models use only one predictor variable and therefore the predicition domain can be shown as spread of the training samples across the x axis (standardized height of the \\texttt{carb} and \\texttt{arom15arom16} peak, respectively) of a histogram (a, b; blue bars). Extrapolation occurs if other samples (peat, vegetation) exceed this range. Counts are number of samples in the respective datasets. The improved models include bins across the complete spectra (c, d). Therefore, the range in standardized predictor variable values (y axis) covered by the training data for each bin is shown as orange shaded area for the dataset with a bin width of 50 (c) and 10 cm$^{-1}$ (d), respectively, as used by the best improved models for holocellulose and Klason lignin. Extrapolation occurs if other samples (blue shaded regions) exceed these areas. Dashed lines indicate the most important variables for the holocellulose (c) and Klason lignin model (d), respectively (compare with Fig. \\ref{fig:res-p-coefficients})'}
+p_prediction_domain
+```
+
+
+## How do predictions of the original and improved models differ?
+
+There were considerable differences in predictions of the original and improved models using binned spectra for both Klason lignin and holocellulose for the peat samples (Fig. \@ref(fig:res-p-pred-diff-all1) and supplementary Fig. 5 <!---\@ref(fig:res-p-gaussian-beta-depth-profile-best)--->). For holocellulose, the original model tends to predict larger contents for peat, especially for samples with larger holocellulose contents (Fig. \@ref(fig:res-p-pred-diff-all1)). Similar, albeit less pronounced patterns are visible for the vegetation and training data. For Klason lignin, the improved model predicts up to 25 mass-% larger Klason lignin contents for some samples, but for others up to 10 mass-% smaller contents than the original model. This happens particularly in a region where the original model predicts Klason lignin contents between 25 and 35 mass-% (Fig. \@ref(fig:res-p-pred-diff-all1)).  
+This is surprising for two reasons: First, for the training data, both models make quite similar predictions (Fig. \@ref(fig:res-p-pred-diff-all1)). The peat samples have `aro15arom16` values similar to the training data (Fig. \@ref(fig:res-p-prediction-domain)), but nevertheless both models produce contrasting predictions. The same is true for holocellulose for a relatively large fraction of peat samples (Fig. \@ref(fig:res-p-prediction-domain)). Second, both models have comparatively small bias within the range of the training data relevant to peat samples (supplementary Fig. 6 <!---\@ref(fig:res-p-y-yhat-best)--->). Thus, predictions are different even within the range covered by the training data where the models actually make similar predictions and these differences are not due to misfit of either model to the training data. This indicates that the spectra of the training data are not entirely representative for the peat samples, even if they are within the prediction domain (compare also with the previous section). What causes these differences?
+
+```{r res-p-pred-diff-all1, echo=FALSE, out.width="80%", fig.height=6, fig.width=6, fig.cap='Predicted values of the original model versus predicted values of the original model (first column), and the best improved models using extracted peaks (second column) and binned spectra (last column), respectively, for holocellulose (a) and Klason lignin (b), respectively. Colours differentiate the training, peat, and vegetation data from \\cite{Hodgkins.2018}.'}
+p_pred_diff_all1
+```
+
+## What causes differences in predictions?
+
+We hypothesize that both the original and the improved models are not unbiased for samples with other spectral properties, even if these differences occur in variables not directly included in the models. For holocellulose, we could not find indications which model is better. For Klason lignin, we provide mechanistic evidence for why the prediction of the improved models probably are more correct. Therefore, a key result of our analysis is that additional training and validation data is required to compute models to predict SOM holocellulose and Klason lignin contents from MIRS.  
+
+### Holocellulose
+
+In comparison to the training data, spectra for peat typically have larger absorption values at around 1200 cm$^{-1}$ and between (~1200 to 1500 cm$^{-1}$), but a smaller absorption in the region of the "OH-peak" (~3400 cm$^{-1}$) (supplementary Fig. 7 <!---\@ref(fig:res-p-pred-diff-hol-spectra-diff2)--->).  
+These spectral differences are directly related to the differences in predicted values of the original and improved model (supplementary Fig. 8 <!---\@ref(fig:res-p-pred-diff-hol-intensity2)--->): The smaller the OH-peak is, the larger are predicted values of the original model in comparison to the improved model using binned spectra, especially for larger `carb` peak heights. Similarly, the larger the trough at 1200 cm$^{-1}$ or the absorbance at 1550 cm$^{-1}$ is, the larger are predictions of the original model in comparison to the improved model using binned spectra. This indicates that both the delineation of the `carb` peak and predictions using binned spectra are potentially sensitive to these differences and that this causes the observed differences in the predictions even in the range of the training data where both models yield similar predictions for the training samples.  
+What causes this sensitivity? Peak heights --- for the original model --- or spectral variables (bins) --- for the improved models using binned spectra --- are normalized by the sum of absorbance values in the complete spectra [@Hodgkins.2018]. This is necessary to make spectra comparable, but also renders inferences sensitive to absorbance of other peaks not directly considered or with low influence in the original and improved models, respectively. Thus, if the OH-peak is smaller, the normalized height of the `carb` peak is larger than for the same spectrum with a larger OH-peak. Likewise, for the improved model using binned spectra a smaller OH-peak results in larger absorbances around ~1200 to 1600 cm$^{-1}$ where the most influential variables are located (supplementary Fig. 7 <!---\@ref(fig:res-p-pred-diff-hol-spectra-diff2)---> and 2<!---\@ref(fig:res-sup-spectra-sim-p))--->).  
+Why do peat samples have such different spectral properties? We hypothesize the following mechanistic explanation for the differences: Decomposition of peat results in distinct changes in the absorbance at specific wavenumbers, e.g. the "OH-peak" and the fingerprint region [e.g. @Cocozza.2003]. For example, decomposition of phenols and disruption of tissue structures with hydrogen bonds result in a smaller absorbance around the OH-peak [@Kubo.2005; @Schellekens.2015]. The training data contain only undecomposed or industrially processed OM [@DelaCruz.2016; @Hodgkins.2018] which do not reflect such decomposition changes and therefore generally have a larger OH peak (middle row in supplementary Fig. 7<!---\@ref(fig:res-p-pred-diff-hol-spectra-diff2)--->). For decomposed OM, the same `carb` peak height or absorbance at specific wavenumbers therefore represents different holocellulose contents than for the training data.    
+A consequence therefore is that it is questionable if the models (both original and improved) can be applied to peat and other SOM samples in general.  
+
+### Klason lignin
+
+For Klason lignin, whereas the original model is unbiased across all samples (supplementary Fig. 6<!---\@ref(fig:res-p-y-yhat-best)--->), it is not within two classes of training samples. Samples of these classes differ in the relative contribution of the `arom15` and `arom16` peaks to `arom15arom16` (the sum of their heights) (Fig. \@ref(fig:res-p-pred-diff-train1-p2)). The first class (class 1) has high contributions of the `arom15` peak ($>30$%) and typically smaller `arom15arom16` values; the second class (class 2) a smaller contribution of the `arom15` peak and larger `arom15arom16` values. Samples of both classes can have large or small actual Klason lignin contents (Fig. \@ref(fig:res-p-pred-diff-train1-p2)). What we observed is that the model makes biased predictions for both classes: For small `arom15arom16` values, it underestimates contents, but for larger values, it increasingly overestimates Klason lignin contents (supplementary Fig. 9<!---\@ref(fig:res-p-pred-diff-kl-residuals)--->). For the improved model, this bias is much smaller (Fig. \@ref(fig:res-p-pred-diff-train1-p2) and supplementary Fig. 9<!---\@ref(fig:res-p-pred-diff-kl-residuals)--->).  
+We suggest that it is this bias which causes the difference in predictions of the original and improved models. Conditional on the relative contribution of the `arom15` peak to `arom15arom16`, peat samples have smaller and larger `arom15arom16` values than the training data (supplementary Fig. 10<!---\@ref(fig:res-p-pred-diff-kl-histogram1)--->). If one extrapolates the biased predictions of the original model for the training data classes, this means larger under- and overestimation for the peat samples than for the training data using the original model (Fig. \@ref(fig:res-p-pred-diff-train1-p2)). This is supported by measured peat Klason lignin contents: Peat from temperate peatlands was reported to have Klason lignin contents as high as ~70 mass-% and ~57 mass-% on average [@Hayes.2015]. Even though this was peat from extraction sites which probably is more decomposed [@Hayes.2015], this indicates that peat Klason lignin contents can be much larger, also in temperate regions, than predictions of the original model for wood rich tropical peat [@Hodgkins.2018]. In contrast, predictions under the improved model most probably reflect more correct Klason lignin estimates because the bias is much smaller and predicted values are larger for deeper peat samples. Therefore, this bias very likely is the reason why predictions of the original model differ from that of the improved model. Moreover, our results indicate that the improved model makes more correct predictions.  
+What causes this bias? We suggest that `arom15arom16` is a poor indicator for Klason lignin content for samples with varying contents of proteins. Protein C-N and C=O stretching and N-H bending cause strong absorbance around 1560 and 1650 cm$^{-1}$ [@Stuart.2004] and therefore it is not only aromatics which contribute to the `arom16` peak. Larger `arom16` peak heights may be indicative for Klason lignin, but can also be due to high protein contents.  
+This is what distinguishes samples of class 1 and 2 (supplementary Fig. 11<!---\@ref(fig:res-p-pred-diff-train2)--->): Samples of class 1 are wood samples. Wood typically has smaller nitrogen contents, but larger Klason lignin contents [@Cowling.1966; @Aerts.1999; @DelaCruz.2016] which explains the large contribution of the `arom15` peak, indicative for aromatic skeletal vibrations (but not for proteins) [@Stuart.2004], to `arom15arom16`. Conversely, samples of class 2 are leaf and needle samples which may contain both varying contents of Klason lignin and proteins [@Aerts.1999; @Reich.2004; @DelaCruz.2016]. Leaves and needles typically have larger protein contents than wood [@Cowling.1966; @Aerts.1999; @Reich.2004] and therefore a smaller contribution of the `arom15` peak to `arom15arom16`. This is why the original model predicts high Klason lignin contents for samples of class 2, even though some of these actually have low Klason lignin contents (Fig. \@ref(fig:res-p-pred-diff-train1-p2)). The model balances this, but in doing so it introduces the observed bias. As a consequence, `arom15arom16` alone is a poor predictor for Klason lignin content of OM.  
+The improved model using binned spectra gives more weight to variables related to aromatic skeletal structures and not in a region where proteins cause large absorbances [@Stuart.2004] (Fig. \@ref(fig:res-p-coefficients)). We suggest that these variables are better predictors for Klason lignin because they interfere less with other molecular structures, such as proteins [@Stuart.2004]. Overall, this mechanistic explanation provides additional evidence that the improved model using binned spectra probably makes more correct predictions.
+
+```{r res-p-pred-diff-train1-p2, echo=FALSE, out.width="90%", fig.height=4, fig.width=7, fig.cap='Measured training data Klason lignin contents versus fitted values [mass-\\%] of the original model (first column), the improved model using extracted peaks (second column), and the improved model using binned spectra (third column). Points are scaled according to the relative contribution of the \\texttt{arom15} peak to \\texttt{arom15arom16}. The color gradient represents \\texttt{arom15arom16} values. The diagonal line represents values where measured and fitted values are identical. If points are below the line, the model overestimates contents.'}
+p_pred_diff_train1_p2
+```
+
+## Can holocellulose contents also be predicted for samples with mineral interferences?
+
+Our analysis shows that models with similar fit to the training data can be computed also if mineral-rich samples are included. We see this as proof-of-concept that holocellulose contents can also be predicted from MIRS for SOM samples with mineral admixtures.  
+If the clay rich old magazine samples are included, the model using binned spectra had the best average predictive performance (ELPD on average `r round(abs(loo_comparison_mineral[2, 1]), 2)` larger). The model using extracted peaks had a worse, but similar performance ($\Delta\text{ELPD}= `r round(loo_comparison_mineral[2, 1], 2)`$, $\Delta\text{SE}= `r round(loo_comparison_mineral[2, 2], 2)`$). Moreover, the models trained on mineral rich samples had a similar fit to the remaining samples as our improved models not trained with the mineral rich samples (supplementary Fig. 12<!---\@ref(fig:res-p-y-yhat-minerals)--->). In comparison to this, the original model considerably overestimated the holocellulose content for these samples, as observed by @Hodgkins.2018. This was also the case for the improved models not trained with the mineral rich samples (supplementary Fig. 12<!---\@ref(fig:res-p-y-yhat-minerals)--->). We see this as proof-of-concept that it is possible to predict holocellulose contents from MIRS even for samples with high mineral contents. Moreover, there is no trade-off in predictive accuracy if mineral rich samples are included, suggesting that general purpose models can be developed.    
+How do coefficients for the model trained with old magazine samples differ from the improved model trained without old magazine samples? According to Fig. \@ref(fig:res-p-coefficients) (middle panel), the "mineral-rich model" down-weights bins near the `carb` peak, in contrast to the improved model not trained on old magazine samples, and instead has a larger coefficient for an additional peak related to aromatic C=C stretching and amide N-H bending and C-N stretching (~1550 cm$^{-1}$) [@Stuart.2004] which corresponds to the `arom15` peak. This provides further evidence that it is possible to infer the holocellulose content via aromatics.
+
+## What can we learn in general from this study?
+
+Our validation analysis provides general lessons for validating models using spectral data. What can we learn from the model validation? First, even though @Hodgkins.2018 had a sensible rationale in including only selected peaks into their model based upon causal knowledge, this strategy has critical weaknesses. If predictive accuracy is the main goal, pre-selecting variables triggers underfitting and bias and therefore is ineffective. Instead, it is more effective to include a larger set of variables in a model and to use regularization to avoid overfitting and find relations between predictor variables and the target variable [@Piironen.2017].  
+Second, a linear relation between the target variable to predict and a predictor variable is no sufficient validation of a spectral prediction model if the training data is not representative for the samples on which the model is applied. Most importantly, due to normalization, predictions can even be sensitive to variables not included in the model. Therefore, to assess if training data (the prediction domain) is representative, whole spectra have to be compared.  
+Third, our analysis also shows that re-evaluating existing models with their original training data can be an effective way to improve the models. Here, it was important that one modification of the original model often addressed multiple limitations at once due to interdependences between the limitations: Improving the models' predictive performance did not only address underfitting, but reduced also the bias in the models (Fig. \@ref(fig:res-p-pred-diff-train1-p2)). Analyzing the prediction domain did not only show that the models extrapolate, but we could use this knowledge to analyze the practical impact of the bias. Lastly, including additional variables not only improved the predictive performance, but allowed us also to compute a model that probably is suitable for samples containing minerals. We therefore suggest that continuous re-evaluation of existing models can be an effective way to develop better models and should be part of a general model development workflow [@Gelman.2020]. 
+
+## What are weaknesses of our analyses and opportunities for future improvements?
+
+There are several problems we could not solve. The two most important problem is that also for the improved models, it is unclear if predictions are correct outside the prediction domain of the training data and therefore if the models are applicable to SOM in general.    
+Further issues are: (1) The overall accuracy of the models probably can be improved with more training samples. (2) It is unclear how robust the original models and our improved models --- especially models using binned spectra --- are in terms of calibration transfer. We assume the binning and estimation procedure is relatively robust since bin widths are comparatively broad and all variables were standardized, meaning that only between sample variability in intensities are relevant. However, this remains to be tested. (3) Even though we computed a model that could fit and predict mineral rich samples, it is unclear if this holds in general. (4) Some of our models had computational issues (holocellulose: `r hklmirs::format_numbers(sum(d_models$n_divergent_transitions[d_models$variable_y == "Holocellulose"] > 0))` model with maximally `r hklmirs::format_numbers(max(d_models$n_divergent_transitions[d_models$variable_y == "Holocellulose"]))` divergent transitions, Klason lignin: `r hklmirs::format_numbers(sum(d_models$n_divergent_transitions[d_models$variable_y == "Klason lignin"] > 0))` models with maximally `r hklmirs::format_numbers(max(d_models$n_divergent_transitions[d_models$variable_y == "Klason lignin"]))` divergent transitions) that we could not resolve.    
+Our analysis thus opens concrete and promising directions to further improve the models: We need training and validation data that includes SOM, particularly highly decomposed peat. Such data make it possible to analyze the impact of the bias and to compute models with less bias, higher representativity for SOM and peat, and potentially larger predictive accuracy. In addition to this, it is likely that an operative  model for prediction of holocellulose contents in SOM samples with mineral admixtures can be developed by including such samples with more diverse minerals. Ideally, such improvements would be performed across multiple labs with an archive of sample materials such that calibration transfer of the models between different mid infrared spectrometers can be further explored.  
+To support such developments, we implemented the best models using binned spectra and extracted peaks and also the model using binned spectra that could predict mineral-rich samples into the R package irpeat [@Teickner.2020a].  
+
+\conclusions[Conclusions]
+
+Our aim was to validate the original models of @Hodgkins.2018 to predict OM holocellulose and Klason lignin contents, identify weaknesses, provide a concrete strategy how to tackle these problems, and provide first improvements using the same data.  
+The main weakness of the original models is the underlying training data: It is not in general representative for SOM, peat, and peat forming vegetation. This results in biased predictions for holocellulose and Klason lignin for SOM, such as peat. Manual variable selection favored this bias because it excluded information critical for better model fits. Finally, the original models can produce unrealistic (smaller than 0 or larger than 100 mass-%) predictions and prediction intervals, also in practice.   
+Even though it was impossible to address the key problem of unrepresentative training data using the original data, we could address some of these issues, provide improved models, and develop a concrete strategy for future improvements. The improved models have less bias, avoid unrealistic predictions, and use information from the complete spectra and thus have a better predictive accuracy. Moreover, we provide a proof-of-concept that it is possible to predict holocellulose contents also for OM with mineral admixtures.  
+Our analysis thus opens concrete and promising directions to further improve the models: A major opportunity is to collect training and validation data representative for SOM, such that the improved models can be extended and thoroughly validated. In a next step, potential calibration transfer issues can be addressed.  
+Improved models to predict SOM holocellulose and Klason lignin contents can be of large importance in the long-run because they allow cost-efficient high-throughput analyses of SOM. Detailed understanding of SOM chemistry across large scales, as well as the processes that result in changes in SOM chemistry, are only possible if such fast and effective tools are available.
+
+# Acknowldegements {.unnumbered}
+
+```{r supporting-info, echo=FALSE, include=FALSE, eval = TRUE}
+rmarkdown::render("008-paper-supplementary.Rmd", clean = FALSE)
+```
+
+```{r reply, echo=FALSE, include=FALSE, eval = TRUE}
+rmarkdown::render("001-reply-main.Rmd", clean = FALSE)
+```
+
+
+```{r references-preparation, echo=FALSE, eval=FALSE}
+# get bibkeys
+bibkeys <- bib2df::bib2df("references.bib")
+
+# get texts to search for bibkey
+si_text <- 
+  readLines("008-paper-supplementary.Rmd") %>%
+  paste(collapse = " ")
+  
+main_text <- 
+  readLines("001-paper-main.Rmd") %>%
+  paste(collapse = " ")
+
+bibkeys <-
+  bibkeys %>%
+  dplyr::mutate(
+    refs_only_si = 
+      purrr::map_lgl(BIBTEXKEY, function(x) {
+        stringr::str_detect(si_text, x) & !stringr::str_detect(main_text, x)
+      })
+  )
+
+\nocite{`r paste(bibkeys$BIBTEXKEY[!bibkeys$refs_only_si], collapse = ", ")`}
+\bibliography{references}
+
+\nocitesi{`r paste(bibkeys$BIBTEXKEY[bibkeys$refs_only_si], collapse = ", ")`}
+\bibliographystylesi{apacite}
+\bibliographysi{references}
+```

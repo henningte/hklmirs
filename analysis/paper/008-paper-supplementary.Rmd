@@ -1,0 +1,350 @@
+---
+title: 'Supplementary Information to "Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid Infrared Spectra"'
+author: "Henning Teickner, Klaus-Holger Knorr"
+date: ""
+output: 
+  bookdown::pdf_book:
+    keep_tex: true
+    citation_package: natbib
+    toc: false
+bibliography: references
+header-includes:
+   - \usepackage{float}
+   - \renewcommand\thesection{S\arabic{section}}
+---
+
+```{r sup-setup, echo=FALSE}
+knitr::opts_chunk$set(fig.align = "center", 
+                      fig.pos = "H",
+                      echo = FALSE,
+                      cache = TRUE,
+                      dev = "pdf")
+```
+
+
+# Comparison of original non-Bayesian and original Bayesian regression models
+
+Throughout the main text, we analyzed weaknesses of the models as developed by @Hodgkins.2018 using a Bayesian implementation of these original models. Here, we show that working within a Bayesian framework does not create the bias or any other weaknesses we discussed. To this end, we compare predictions of the original non-Bayesian models (implemented with `lm` [@RCoreTeam.2020]) with those of the original Bayesian model we used as baseline model throughout the main text.  
+Figure \@ref(fig:res-sup-original-models) compares median fitted values, and lower and upper 90% prediction intervals for both models. 
+
+```{r sup-original-models, echo=FALSE, include=FALSE}
+# data frame with predicted values from both models
+d_compare_original <- 
+  dplyr::bind_cols(
+    dplyr::bind_rows(
+    m1.1 %>%
+      predict(interval = "prediction",
+              level = 0.9) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        variable_y = "Holocellulose"
+      ),
+    m2.1 %>%
+      predict(interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        variable_y = "Klason lignin"
+        )
+    ) %>%
+      tidyr::pivot_longer(cols = dplyr::one_of(c("fit", "lwr", "upr")),
+                          names_to = "variable_quantile",
+                          values_to = "value"),
+    dplyr::bind_rows(
+      m1.2 %>%
+      rstanarm::posterior_predict() %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit_bayes = median(x),
+          lwr_bayes = quantile(x, prob = 0.05),
+          upr_bayes = quantile(x, prob = 0.95)
+        )
+      }),
+    m2.2 %>%
+      rstanarm::posterior_predict() %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit_bayes = median(x),
+          lwr_bayes = quantile(x, prob = 0.05),
+          upr_bayes = quantile(x, prob = 0.95)
+        )
+      })
+    ) %>%
+      tidyr::pivot_longer(cols = dplyr::one_of(c("fit_bayes", "lwr_bayes", "upr_bayes")),
+                          names_to = "variable_quantile",
+                          values_to = "value_bayes") %>%
+      dplyr::select(-variable_quantile)
+  ) %>%
+  dplyr::mutate(
+    variable_quantile = dplyr::case_when(
+      variable_quantile == "fit" ~ "Median",
+      variable_quantile == "lwr" ~ "Lower 90%",
+      variable_quantile == "upr" ~ "Upper 90%",
+    )
+  )
+  
+# annotations
+d_compare_original_annotation <-
+  d_compare_original %>%
+  dplyr::group_by(variable_y, variable_quantile) %>%
+  dplyr::summarise(correlation = cor(value, value_bayes, method = "pearson"),
+                   .groups = "drop")
+
+# plot
+p1 <-
+  d_compare_original %>%
+  dplyr::filter(variable_y == "Holocellulose") %>%
+  ggplot(aes(x = value * 100, y = value_bayes * 100)) +
+  geom_abline(intercept = 0, slope = 1, colour = "grey") +
+  geom_point() +
+  labs(title = "Holocellulose",
+       x = "Non-Bayesian",
+       y = "Bayesian") +
+  facet_wrap(~ variable_quantile) +
+  coord_fixed()
+  
+p2 <-
+  d_compare_original %>%
+  dplyr::filter(variable_y == "Klason lignin") %>%
+  ggplot(aes(x = value * 100, y = value_bayes * 100)) +
+  geom_abline(intercept = 0, slope = 1, colour = "grey") +
+  geom_point() +
+  labs(title = "Klason lignin",
+       x = "Non-Bayesian",
+       y = "Bayesian") +
+  facet_wrap(~ variable_quantile) +
+  coord_fixed() 
+```
+
+```{r res-sup-original-models, echo=FALSE, out.width="70%", fig.height=5, fig.width=6, fig.cap="Comparison of the original non-Bayesian model (the models used by \\citet{Hodgkins.2018}) and original Bayesian model used in the analyses of the main text. Shown are lower and upper 90\\% prediction intervals of both models plotted against each other, as well as median predicitons, for holocellulose (a) and Klason lignin (b), respectively. All values have a Pearson correlation of 1."}
+p1 / p2 +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+\clearpage
+
+# Simulation experiment
+
+Here, we present results of a simulation study that shows exemplarily how changes in heights of other peaks can affect the normalized peak height of the `carb` peak and absorbances at other wavenumbers. With this, we want to demonstrate that both the original and improved models are sensitive to the overall spectra and therefore differences between training data and sample data can cause differences in predictions.  
+In the simulation study, we simulated spectra with the same `carb` peak height, but a differently large OH-peak height. We used the script from @Hodgkins.2018 to compute the normalized `carb` peak height in the spectra and analyzed also the absorbance at other wavenumbers. Figure \@ref(fig:res-sup-spectra-sim-p) shows the simulated spectra.
+
+```{r sup-simulation, echo=FALSE, include=FALSE}
+# simulate spectra
+wn <- d$spectra[[1]]$x    # wavenumber range
+carb_range <- 900:1190
+carb_pos <- mean(carb_range) # approximate position of carb peak
+carb_width <- 0.0003 # defines width of carb peak
+carb_height <- seq(from = 20, to = 75, by = 5) # sequence of carb peak heights
+oh_range <- 2500:3700
+oh_pos <- mean(oh_range) # approximate position of OH peak
+oh_width <- 0.00002 # defines width of OH peak
+oh_height <- seq(from = 20, to = 75, by = 20) # sequence of OH peak heights
+bl_height <- 10 # absorbance in other parts of spectrum
+
+# simulate spectra
+d_spectra_sim_raw <- rep(bl_height, length(wn))
+d_spectra_sim <-
+  expand.grid(carb_pos = carb_pos, carb_width = carb_width, carb_height = carb_height, oh_pos = oh_pos, oh_width = oh_width, oh_height = oh_height, bl_height = bl_height) %>%
+  dplyr::mutate(measurement_id = seq_len(nrow(.)),
+                sample_id = as.character(measurement_id))
+d_spectra_sim$spectra <- 
+  purrr::map(seq_len(nrow(d_spectra_sim)), function(i) {
+    res <- 
+      tibble::tibble(
+        x = wn,
+        y = d_spectra_sim_raw
+      )
+    res$y[wn %in% carb_range] <- (d_spectra_sim$carb_height[i] -d_spectra_sim$carb_width[i] * (carb_range - d_spectra_sim$carb_pos[i])^2)
+    res$y[wn %in% oh_range] <- (d_spectra_sim$oh_height[i] -d_spectra_sim$oh_width[i] * (oh_range - d_spectra_sim$oh_pos[i])^2)
+    res
+  })
+
+class(d_spectra_sim) <- c("ir", class(d_spectra_sim))
+d_spectra_sim <-
+  d_spectra_sim %>%
+  ir::ir_normalise()
+
+d_spectra_sim_res <-
+  d_spectra_sim %>%
+  irpeat:::irp_content_klh_hodgkins_prepare() %>%
+  irpeat:::irp_content_klh_hodgkins_main(export = NULL,
+                                         verbose = FALSE,
+                                         make_plots = FALSE)
+
+d_spectra_sim$carb_height_sim <- d_spectra_sim_res$norm.Acorr$carb
+
+# plot extracted carb peak height versus simulated peak height in dependency of OH peak height
+spectra_sim_p1 <-
+  d_spectra_sim %>%
+  ggplot(aes(x = carb_height, y = carb_height_sim, colour = oh_height)) +
+  geom_point() +
+  labs(y = "carb peak height (extracted and normalized)",
+       x = "carb peak height (simulated)") +
+  guides(colour = guide_colorbar(title = "OH-peak height (simulated)")) +
+  theme(legend.position = "bottom")
+
+# plot absorbance at 1250 in dependency of OH peak height
+spectra_sim_p2 <-
+  d_spectra_sim %>%
+  ir::ir_get_intensity(wavenumber = 1250) %>%
+  dplyr::mutate(intensity = 
+                  intensity %>%
+                  bind_rows() %>%
+                  dplyr::pull(y)) %>%
+  ggplot(aes(x = carb_height, y = intensity, colour = oh_height)) +
+  geom_point() +
+  labs(y = expression("Absorbance at 1250 cm"^{-1}),
+       x = "carb peak height (simulated)") +
+  guides(colour = guide_colorbar(title = "OH-peak height (simulated)")) +
+  theme(legend.position = "bottom")
+
+# plot of simulated spectra
+spectra_sim_p3 <-
+  d_spectra_sim %>%
+  plot() +
+  geom_path(aes(x = x, y = y, colour = carb_height, group = measurement_id)) +
+  facet_wrap(~ oh_height) +
+  theme(legend.position = "bottom") +
+  guides(colour = guide_colorbar(title = "carb peak height (simulated)")) +
+  labs(y = "Absorbance (normalized)", x = expression("Wavenumber ["*cm^{-1}*"]"))
+
+spectra_sim_p <-
+  (spectra_sim_p1 +
+     spectra_sim_p2) +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+spectra_sim_p <-
+  spectra_sim_p3 /
+  spectra_sim_p +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+```
+
+```{r res-sup-spectra-sim-p, echo=FALSE, out.width="80%", fig.height=7, fig.width=7, fig.cap="Results of the simulation experiment. (a) Plots of the simulated spectra with different OH-peak heights (columns) and different carb peak heights (colour gradients). Due to the normalization (division of each absorbance value by the sum of all absorbance value), the normalized simulated carb peak heights get smaller as the OH-peak gets larger. For this reason, the extracted normalized carb peak height depends not only on the simulated carb peak height, but is also sensitive to the OH-peak height (b). This is also true for absorbance values extracted at specific wavenumbers (c)."}
+spectra_sim_p
+```
+
+
+\clearpage
+
+# Supplementary figures
+
+Figure \@ref(fig:res-p-gaussian-beta-depth-profile) shows depth profiles of holocellulose and Klason lignin contents for the peat cores from @Hodgkins.2018, predicted either with the original normal regression model or the beta regression model with the same model structure.
+
+```{r res-p-gaussian-beta-depth-profile, echo=FALSE, out.width="70%", fig.height=9, fig.width=6, fig.cap="Depth profiles of predicted Holocellulose (a) and Klason lignin contents (b) for peat core data collected by \\cite{Hodgkins.2018}. Different panels represent different peat cores. Coloured curves are median point predictions, shaded regions are 90\\% prediction intervals, dashed vertical lines represent a content of 0  mass-\\%. Colours differentiate predictions of a Gaussian Bayesian model (blue) and a Bayesian beta regression model (red). All models had the same model structure as in \\cite{Hodgkins.2018}."}
+p_gaussian_beta_depth_profile
+```
+
+\clearpage
+
+Figure \@ref(fig:res-sup-kl-hol) summarizes the _measured_ holocellulose and Klason lignin contents in the OM samples of the training data set of @Hodgkins.2018.
+
+```{r sup-kl-hol, echo=FALSE}
+p1 <-
+  d %>%
+  ggplot(aes(y = (hol + kl) * 100, x = sample_type)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(y = "Sample type", x = "Holocellulose + Klason lignin [mass-%]")
+
+p2 <-
+  d %>%
+  ggplot(aes(y = kl * 100, x = hol * 100, colour = sample_type)) +
+  geom_point() +
+  labs(y = "Klason lignin [mass-%]", x = "Holocellulose [mass-%]") +
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE) +
+  guides(colour = guide_legend(title = "Sample type", ncol = 3, title.position="top")) +
+  theme(legend.position = "bottom")
+```
+
+```{r res-sup-kl-hol, echo=FALSE, out.width="100%", fig.height=4.5, fig.width=7, fig.cap='Measured holocellulose and Klason lignin contents in OM samples of the training data of \\citet{Hodgkins.2018}. A: Boxplots of the sum of the measured holocellulose and Klason lignin contents for different sample types in the training data. B: Klason lignin content versus holocellulose content for the training data samples. Colours represent different sample types and lines are linear regression lines fitted to the data.'}
+p1 + p2 +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-gaussian-beta-depth-profile-best) shows holocellulose and Klason lignin contents for the peat core samples from @Hodgkins.2018 predicted by the original model, the improved model using binned spectra, and the improved model using extracted peaks.
+
+```{r res-p-gaussian-beta-depth-profile-best, echo=FALSE, out.width="70%", fig.height=9, fig.width=6, fig.cap='Depth profiles of Holocellulose (a) and Klason lignin contents (b) for the same data as in figure \\ref{fig:res-p-gaussian-beta-depth-profile}, but now comparing predictions of the original model with those from improved models. Different panels represent different peat cores. Coloured curves are median point predictions, shaded regions are 90\\% prediction intervals, dashed vertical lines represent a content of 0 mass-\\%. Colours differentiate predictions of the original Gaussian model ("Original": blue), the best model using extracted peaks ("Best all peaks": red) and the best model using binned spectra ("Best binned spectra": green).'}
+p_gaussian_beta_depth_profile_best
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-y-yhat-best) shows measured holocellulose and Klason lignin contents versus the respective fitted values of the original model, the improved model using binned spectra, and the improved model using extracted peaks. 
+
+```{r res-p-y-yhat-best, echo=FALSE, out.width="70%", fig.height=6.5, fig.width=6, fig.cap='Measured values of the training dataset from \\cite{Hodgkins.2018} versus fitted values of the original model (first column) in comparison to the improved models (second and third columns) for (a) holocellulose and (b) Klason lignin. Points are median predictions from the models, smooth lines and shaded regions are LOESS smoothers and corresponding 95\\% confidence intervals. The diagonal lines indicates ideal fit. Points above the line indicate overestimation by the model and points under the diagonal underestimation.'}
+p_y_yhat_best
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-pred-diff-hol-spectra-diff2) shows MIRS for the training data, vegetation samples, and peat samples from @Hodgkins.2018, classified according to different `carb` peak heights and colored according to the prediction differences between the original model and the improved model using binned spectra for holocellulose. This plot makes visible the differences between the spectra for peat (and vegetation samples) in comparison to the training data. 
+
+```{r res-p-pred-diff-hol-spectra-diff2, warning=FALSE, echo=FALSE, out.width="90%", fig.height=7, fig.width=7, fig.cap='Spectra for the training (left column), peat (middle column), and vegetation (right column) samples of \\cite{Hodgkins.2018} for different ranges of \\texttt{carb} peak heights (rows). The colour scale indicates prediction differences between the original and improved model using binned spectra for holocellulose. Larger values represent larger predicted holocellulose contents using the original model in comparison to the improved model using binned spectra.'}
+p_pred_diff_hol_spectra_diff2
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-pred-diff-hol-intensity2) shows prediction differences between the original model and the improved model using binned spectra for holocellulose in dependency of absorbance values at different wavenumbers and for different classes of `carb` peak heights.
+
+```{r res-p-pred-diff-hol-intensity2, warning=FALSE, echo=FALSE, out.width="50%", fig.height=14, fig.width=7, fig.cap='Prediction differences between the original model and improved model using binned spectra for the training (first row), peat (second row), and vegetation (bottom row) samples of \\cite{Hodgkins.2018} for different ranges of \\texttt{carb} peak heights (columns) versus intensities at different wavenumber values on the x axis (a: 3400, b: 1200, c: 1550 cm$^{-1}$). Larger prediction differences mean that the original model made larger predictions than the improved model using binned spectra.'}
+p_pred_diff_hol_intensity2
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-pred-diff-kl-residuals) shows residuals of the original model, the improved model using binned spectra, and the improved model using extracted peaks versus standardized `arom15arom16` values and for different levels of the relative contribution of the `arom15` peak height to the `arom15arom16` value.
+
+```{r res-p-pred-diff-kl-residuals, warning=FALSE, echo=FALSE, out.width="50%", fig.height=5, fig.width=6, fig.cap='Residuals of the original model (first column), improved model using extracted peaks (second column), and the improved model using binned spectra (third column) versus \\texttt{arom15arom16} values (is equivalent to values predicted by the original model) for different levels of the relative contribution of the \\texttt{arom15} peak to \\texttt{arom15arom16} (rows). Lines and shaded areas are regression lines fitted for each panel. For samples with large contribution of the \\texttt{arom15} peak to \\texttt{arom15arom16}, the original model is biased (bottom left panel), whereas the imprroved models are not biased.'}
+p_pred_diff_kl_residuals
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-pred-diff-kl-histogram1) shows `arom15arom16` values for the training data, peat, and vegetation samples from @Hodgkins.2018, for different levels of the relative contribution of the `arom15` peak height to the `arom15arom16` value. Conditional on this contribution, peat samples regularly have larger or smaller `arom15arom16` values.
+
+```{r res-p-pred-diff-kl-histogram1, echo=FALSE, out.width="60%", fig.height=4, fig.width=5, fig.cap='Histograms of \\texttt{arom15arom16} values for the training, peat, and vegetation samples from \\cite{Hodgkins.2018} for different levels of the relative contribution of the \\texttt{arom15} peak to \\texttt{arom15arom16} (larger values mean the \\texttt{arom15} peak is larger relative to the \\texttt{arom16} peak).'}
+p_pred_diff_kl_histogram1
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-pred-diff-train2) shows measured holocellulose and Klason lignin contents versus the respective fitted values of the original model, the improved model using binned spectra, and the improved model using extracted peaks, while differentiating the sample type classes defined in @Hodgkins.2018. This makes visible that for Klason lignin, the two classes of training samples in the main text comprise different sample types (class 1: wood samples, type 2: leaves and grasses).
+
+```{r res-p-pred-diff-train2, echo=FALSE, out.width="90%", fig.height=6, fig.width=7, fig.cap='Measured values versus fitted values [mass-\\%] for the original model (first column), the improved model using extracted peaks (second column), and the improved model using binned spectra (third column) for holocellulose (a) and Klason lignin (b), respectively. Colours differentiate different sample types. The diagonal line represents values where measured and fitted values are identical. If points are below the line, the model overestimates contents.'}
+p_pred_diff_train2
+```
+
+\clearpage
+
+Figure \@ref(fig:res-p-y-yhat-minerals) shows measured holocellulose and Klason lignin contents versus the respective fitted values of the original model, the improved model using binned spectra, the improved model using extracted peaks, the improved model using binned spectra trained with old magazine samples, and the improved model using extracted peaks trained with old magazine samples.
+
+```{r res-p-y-yhat-minerals, echo=FALSE, out.width="100%", fig.height=3.5, fig.width=7.5, fig.cap='Predicted median holocellulose contents versus measured holocellulose contents for the Gaussian model with original model structure (first panel), the improved best models for both approaches (model including all peaks from the peak extraction procedure of \\cite{Hodgkins.2018}, model using binnes spectra with a bin width of 50 cm$^{-1}$), but fitted only to samples without mineral interferences (second and third panel), and the same models fitted also to samples with mineral interferences (last two panels). The diagonal line represent identical fitted and measured values. Colours differentiate samples with (blue) and without (red) mineral interferences.'}
+p_y_yhat_minerals
+```
+
+<!---Figure \@ref(fig:res-p-veg-species) shows holocellulose and Klason lignin contents of vegetation samples from @Hosgkins.2018, predicted using the original model and the best models using binned spectra (for holocellulose: not calibrated with samples with mineral admixtures)
+
+```{r res-p-veg-species, eval = FALSE, echo=FALSE, out.width="60%", fig.height=7, fig.width=4.5, fig.cap='Predicted vegetation median holocellulose and Klason lignin contents for the vegetation samples of \\cite{Hodgkins.2018}. Points are median predicted values, solid grey lines connect the same samples, shaded regions are 90\\% prediction intervals of individual samples.'}
+p_veg_species
+```
+--->
+
+\clearpage
+
+Figure \@ref(fig:res-p-oh-height-difference) shows differences in the absorbance at 3400 cm$^{-1}$ in area normalized spectra between the training, peat, and vegetation data.
+
+```{r, res-p-oh-height-difference, out.width="60%", fig.height=3.5, fig.width=5.5, fig.cap='Absorbance (intensity) at 3400 cm$^{-1}$ in area normalized spectra between the training, peat, and vegetation data.'}
+p_oh_height_difference
+```
+

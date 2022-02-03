@@ -1,0 +1,543 @@
+```{r m-gaussian-beta-1}
+## beta regression models
+
+# define priors
+brms_beta_priors <-
+  c(
+    brms::prior_string("normal(0, 2.5)", class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+
+# compute models
+m1.3 <- brms::brm(hol ~ carb, 
+                  data = d %>% dplyr::filter(sample_type != "old magazines"), 
+                  family = Beta(link = "logit", link_phi = "log"),
+                  prior = brms_beta_priors,
+                  chains = chains,
+                  seed = seed,
+                  iter = iter,
+                  warmup = warmup)
+
+m2.3 <- brms::brm(kl ~ arom15arom16, 
+                  data = d %>% dplyr::filter(sample_type != "office paper"), 
+                  family = Beta(link = "logit", link_phi = "log"),
+                  prior = brms_beta_priors,
+                  chains = chains,
+                  seed = seed,
+                  iter = iter,
+                  warmup = warmup)
+
+# compute loos
+m1.3_loo <- loo(m1.3, k_threshold = k_threshold)
+m2.3_loo <- loo(m2.3, k_threshold = k_threshold)
+
+# ---todo: brms and rstanarm yield very different uncertainty estimates. brms has smaller prediction intervals. The reason seems to be the different priors for phi (normal(0, 2.5) for rstanarm; gamma(0.01, 0.01) for brms).
+```
+
+```{r m-gaussian-beta-2}
+## predictions for peat samples
+
+# predict Klason lignin and holocellulose contents using the original model
+d_peat_res_path <- "../data/derived_data/d_peat_peaks"
+dir.create(d_peat_res_path)
+
+d_peat <-
+  d_peat %>%
+  irpeat::irp_content_klh_hodgkins(export = d_peat_res_path, 
+                                   verbose = FALSE, 
+                                   make_plots = FALSE)
+
+# import the extracted peaks and compute arom15arom16
+d_peat_res <- read.csv(paste0(d_peat_res_path, "/Heights_Norm.Corr.csv"), 
+                       header = TRUE, 
+                       row.names = 1) %>%
+  dplyr::mutate(arom15arom16 = arom15 + arom16) %>%
+  purrr::map2_df(seq_len(nrow(res_scale)), function(x, i) {
+    scale(x, 
+          center = res_scale$center[[i]], 
+          scale = res_scale$scale[[i]])
+  })
+
+# compute predictions
+d_peat_pred <- 
+  dplyr::bind_rows(
+    m1.1 %>%
+      predict(newdata = d_peat_res %>% dplyr::mutate(carb = as.numeric(carb)),
+              interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        model = "Gaussian, non-Bayesian",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Gaussian, Bayesian",
+        variable_y = "Holocellulose"
+      ),
+    m2.1 %>%
+      predict(newdata = d_peat_res %>% dplyr::mutate(arom15arom16 = as.numeric(arom15arom16)),
+              interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        model = "Gaussian, non-Bayesian",
+        variable_y = "Klason lignin"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Gaussian, Bayesian",
+        variable_y = "Klason lignin"
+      ),
+    m1.3 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Beta",
+        variable_y = "Holocellulose"
+      ),
+    m2.3 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Beta",
+        variable_y = "Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1:6, function(x) {
+      tibble::tibble(
+        sample_id = d_peat$sample_id, 
+        core_label = d_peat$core_label,
+        sampling_longitude = d_peat$sampling_longitude, 
+        sampling_latitude = d_peat$sampling_latitude, 
+        sampling_altitude = d_peat$sampling_altitude, 
+        sample_depth_lower = d_peat$sample_depth_lower, 
+        sample_depth_upper = d_peat$sample_depth_upper
+      )
+    })
+  )
+
+# add fitted values from Gaussian model as separate variable
+d_peat_pred <-
+  dplyr::left_join(d_peat_pred,
+                   d_peat_pred %>% 
+                     dplyr::filter(model == "Gaussian, Bayesian") %>%
+                     dplyr::select(variable_y, sample_id, fit) %>%
+                     dplyr::rename(fit_gaussian = "fit"),
+                   by = c("variable_y", "sample_id"))
+```
+
+```{r m-gaussian-beta-3}
+## predictions for vegetation samples
+
+## create data sets for predictions
+d_veg_res_path <- "../data/derived_data/d_veg_peaks"
+dir.create(d_veg_res_path)
+d_veg_res <-
+  irpeat::irp_content_klh_hodgkins(d_veg,
+                                   export = d_veg_res_path,
+                                   verbose = FALSE,
+                                   make_plots = FALSE)
+
+# import the extracted features and compute missing variables
+d_veg_res <- read.csv(paste0(d_veg_res_path, "/Heights_Norm.Corr.csv"), 
+                       header = TRUE, 
+                       row.names = 1) %>%
+  dplyr::mutate(arom15arom16 = arom15 + arom16) %>%
+  purrr::map2_df(seq_len(nrow(res_scale)), function(x, i) {
+    scale(x, 
+          center = res_scale$center[[i]], 
+          scale = res_scale$scale[[i]])
+  })
+
+# compute predictions
+d_veg_pred <- 
+  dplyr::bind_rows(
+    m1.1 %>%
+      predict(newdata = d_veg_res %>% dplyr::mutate(carb = as.numeric(carb)),
+              interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        model = "Gaussian, non-Bayesian",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Gaussian, Bayesian",
+        variable_y = "Holocellulose"
+      ),
+    m2.1 %>%
+      predict(newdata = d_veg_res %>% dplyr::mutate(arom15arom16 = as.numeric(arom15arom16)),
+              interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        model = "Gaussian, non-Bayesian",
+        variable_y = "Klason lignin"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Gaussian, Bayesian",
+        variable_y = "Klason lignin"
+      ),
+    m1.3 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Beta",
+        variable_y = "Holocellulose"
+      ),
+    m2.3 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Beta",
+        variable_y = "Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1:6, function(x) {
+      tibble::tibble(
+        sample_id = d_veg$sample_id, 
+        site_name = d_veg$site_name,
+        species_name = d_veg$species_name,
+        plant_part = d_veg$plant_part
+      )
+    })
+  )
+
+# add fitted values from Gaussian model as separate variable
+d_veg_pred <-
+  dplyr::left_join(d_veg_pred,
+                   d_veg_pred %>% 
+                     dplyr::filter(model == "Gaussian, Bayesian") %>%
+                     dplyr::select(variable_y, sample_id, fit) %>%
+                     dplyr::rename(fit_gaussian = "fit"),
+                   by = c("variable_y", "sample_id"))
+```
+
+
+```{r m-gaussian-beta-4}
+### plot of depth profiles for the peat core data: comparison of beta regression and Gaussian regression models
+
+p1 <-
+  d_peat_pred %>%
+  dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian") %>%
+  ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
+             x = sample_depth_lower, 
+             colour = model, 
+             fill = model)) +
+  geom_ribbon(colour = NA, 
+              alpha = 0.2) +
+  geom_path() +
+  geom_hline(yintercept = 0, linetype = 2, colour = "grey") +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) x * 100) +
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"[mass-%]"),
+       x = "Lower layer boundary depth [cm]") +
+  facet_wrap(~ core_label, 
+             scales = "free_y", 
+             ncol = 2) +
+  scale_x_reverse()
+
+p2 <-
+  d_peat_pred %>%
+  dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian") %>%
+  ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
+             x = sample_depth_lower, 
+             colour = model, 
+             fill = model)) +
+  geom_ribbon(colour = NA, 
+              alpha = 0.2) +
+  geom_path() +
+  geom_hline(yintercept = 0, linetype = 2, colour = "grey") +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) x * 100) +
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~content~"[mass-%]"),
+       x = "Lower layer boundary depth [cm]") +
+  facet_wrap(~ core_label, 
+             scales = "free_y", 
+             ncol = 2) +
+  scale_x_reverse()
+
+# combine plots
+p_gaussian_beta_depth_profile <-
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+
+```{r m-gaussian-beta-5}
+### prediction across the whole possible range from 0 to 100 mass-%: comparison of beta regression and Gaussian regression models
+
+# prediction range
+d_range_res <-
+  tibble::tibble(
+    variable_y = c("holocellulose", "Klason lignin"),
+    from = rep(-13, 2),
+    to = from * (-1)
+  )
+
+# sequence of values across the prediction range
+d_range_res <- 
+  tibble::tibble(
+    carb = 
+      seq(from = d_range_res$from[d_range_res$variable_y == "holocellulose"], 
+          to = d_range_res$to[d_range_res$variable_y == "holocellulose"], 
+          length.out = 2 * 1e2),
+    arom15arom16 = 
+      seq(from = d_range_res$from[d_range_res$variable_y == "Klason lignin"], 
+          to = d_range_res$to[d_range_res$variable_y == "Klason lignin"], 
+          length.out = 2 * 1e2)
+  )
+
+# predictions
+d_range_pred <- 
+  dplyr::bind_rows(
+    m1.1 %>%
+      predict(newdata = d_range_res %>% dplyr::mutate(carb = as.numeric(carb)),
+              interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        model = "Gaussian, non-Bayesian",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_range_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        iter = seq_len(nrow(.)),
+        model = "Gaussian, Bayesian",
+        variable_y = "Holocellulose"
+      ),
+    m2.1 %>%
+      predict(newdata = d_range_res %>% dplyr::mutate(arom15arom16 = as.numeric(arom15arom16)),
+              interval = "prediction",
+              level = 0.95) %>%
+      as.data.frame() %>%
+      dplyr::mutate(
+        model = "Gaussian, non-Bayesian",
+        variable_y = "Klason lignin"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_range_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        iter = seq_len(nrow(.)),
+        model = "Gaussian, Bayesian",
+        variable_y = "Klason lignin"
+      ),
+    m1.3 %>%
+      brms::posterior_predict(newdata = d_range_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        iter = seq_len(nrow(.)),
+        model = "Beta",
+        variable_y = "Holocellulose"
+      ),
+    m2.3 %>%
+      brms::posterior_predict(newdata = d_range_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        iter = seq_len(nrow(.)),
+        model = "Beta",
+        variable_y = "Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1:6, function(x) {
+      d_range_res
+    })
+  )
+  
+# add fitted values from Gaussian model as separate variable
+d_range_pred <-
+  dplyr::left_join(d_range_pred,
+                   d_range_pred %>% 
+                     dplyr::filter(model == "Gaussian, Bayesian") %>%
+                     dplyr::select(variable_y, iter, fit) %>%
+                     dplyr::rename(fit_gaussian = "fit"),
+                   by = c("variable_y", "iter"))
+
+# detect fitted values where prediction intervals produce unrealistic predictions for the Gaussian models
+d_range_pred_limits <-
+  d_range_pred %>%
+  dplyr::filter(model == "Gaussian, Bayesian") %>%
+  dplyr::group_by(model, variable_y) %>%
+  dplyr::summarise(index_fit_lwr = which(lwr > 0)[[1]],
+                   index_fit_upr = which(upr > 1)[[1]],
+                   fit_lwr = fit[index_fit_lwr],
+                   fit_upr = fit[index_fit_upr],
+                   lwr_lwr = lwr[index_fit_lwr],
+                   upr_upr = upr[index_fit_upr],
+                   fit_gaussian_lwr = fit_gaussian[index_fit_lwr],
+                   fit_gaussian_upr = fit_gaussian[index_fit_upr],
+                   .groups = "keep")
+
+d_range_pred_limits <-
+  dplyr::bind_cols(
+    d_range_pred_limits %>%
+      tidyr::pivot_longer(cols = dplyr::all_of(c("fit_lwr", "fit_upr")), 
+                          values_to = "fit", 
+                          names_to = "variable_limit"),
+    d_range_pred_limits %>%
+      tidyr::pivot_longer(cols = dplyr::all_of(c("fit_gaussian_lwr", "fit_gaussian_upr")), 
+                          values_to = "fit_gaussian", 
+                          names_to = "variable_gaussian_limit") %>%
+      dplyr::ungroup() %>%
+      dplyr::select(fit_gaussian)
+  )
+```
+
+```{r m-gaussian-beta-6}
+# plot
+p1 <-
+  d_range_pred %>%
+  dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian") %>%
+  ggplot(aes(x = fit_gaussian, y = fit, colour = model, fill = model)) +
+  geom_hline(yintercept = c(0, 1), linetype = 2, colour = "grey") +
+  geom_vline(xintercept = c(0, 1), linetype = 2, colour = "grey") +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, colour = NA) +
+  geom_path() +
+  geom_point(data = d_peat_pred %>% dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian"), 
+             mapping = aes(x = fit_gaussian, y = fit)) +
+  geom_point(data = d_veg_pred %>% dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian"), 
+             mapping = aes(x = fit_gaussian, y = fit), shape = 4) +
+  geom_point(data = d_range_pred_limits %>% dplyr::filter(variable_y == "Holocellulose"), 
+             mapping = aes(x = fit_gaussian, y = fit), shape = 21, fill = "white", colour = "black") +
+  labs(title = "Holocellulose", 
+       x = expression(Predicted~values~"(Gaussian model)"),
+       y = expression(Predicted~values)) +
+  coord_cartesian(ylim = c(0, 1), xlim = c(0, 1)) +
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100)
+
+p2 <-
+  d_range_pred %>%
+  dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian") %>%
+  ggplot(aes(x = fit_gaussian, y = fit, colour = model, fill = model)) +
+  geom_hline(yintercept = c(0, 1), linetype = 2, colour = "grey") +
+  geom_vline(xintercept = c(0, 1), linetype = 2, colour = "grey") +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, colour = NA) +
+  geom_path() +
+  geom_point(data = d_peat_pred %>% dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian"), 
+             mapping = aes(x = fit_gaussian, y = fit)) +
+  geom_point(data = d_veg_pred %>% dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian"), 
+             mapping = aes(x = fit_gaussian, y = fit), shape = 4) +
+  geom_point(data = d_range_pred_limits %>% dplyr::filter(variable_y == "Klason lignin"), 
+             mapping = aes(x = fit_gaussian, y = fit), shape = 21, fill = "white", colour = "black") +
+  labs(title = "Klason lignin", 
+       x = expression(Predicted~values~"(Gaussian model)"),
+       y = expression(Predicted~values)) +
+  coord_cartesian(ylim = c(0, 1), xlim = c(0, 1)) +
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100)
+
+# combine plots
+p_gaussian_beta_range <-
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```

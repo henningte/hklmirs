@@ -1,0 +1,202 @@
+```{r m-minerals-1}
+## Holocellulose
+
+m1.12 <- 
+  brms::brm(hol ~ carb + arom15 + arom16 + acids + aliph28 + aliph29 + trough16 + trough28, 
+            data = d, 
+            family = Beta(link = "logit", link_phi = "log"),
+            prior = brms_beta_priors1,
+            chains = chains,
+            iter = iter,
+            warmup = warmup,
+            seed = seed)
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[4]], ", df_global = 1, autoscale = TRUE)"),
+                       class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.13 <- 
+  brms::brm(
+    hol ~ ., 
+    data = 
+      d_underfitting[[4]] %>% 
+      dplyr::select(-kl),
+    family = Beta(link = "logit", link_phi = "log"),
+    prior = brms_beta_priors2,
+    cores = chains,
+    chains = chains,
+    warmup = warmup,
+    iter = iter,
+    seed = seed,
+    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 22 divergent transitions; adapt_delta = 0.99: There were 2000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10
+  ) 
+```
+
+```{r m-minerals-2}
+# PSIS-LOO
+m1.12_loo <- loo(m1.12, reloo = TRUE, cores = chains)
+m1.13_loo <- loo(m1.13, reloo = TRUE, cores = chains)
+
+loo_comparison_mineral <- loo::loo_compare(m1.12_loo, m1.13_loo)
+```
+
+```{r m-minerals-3}
+# plot of fitted values against measured values
+d_minerals_pred <-
+  tibble::tibble(
+    fit = c(
+      posterior_predict(m1.2, newdata = d) %>%
+        apply(2, median),
+      posterior_predict(m1.10, newdata = d_underfitting[[4]]) %>%
+        apply(2, median),
+      posterior_predict(m1.6, newdata = d) %>%
+        apply(2, median),
+      posterior_predict(m1.12) %>%
+        apply(2, median),
+      posterior_predict(m1.13) %>%
+        apply(2, median)
+    ),
+    model = 
+      rep(c("Original", "Binned (no minerals)", "Peaks (no minerals)", "Peaks", "Binned"), each = nrow(d)) %>%
+      factor(levels = c("Original", "Peaks (no minerals)", "Binned (no minerals)", "Peaks", "Binned"))
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1:5, function(x) {
+      d %>% 
+        dplyr::select(sample_type, hol) %>%
+        dplyr::mutate(mineral = ifelse(sample_type == "old magazines", TRUE, FALSE))
+    })
+  )
+
+# plot
+p_y_yhat_minerals <-
+  d_minerals_pred %>%
+  ggplot(aes(x = fit * 100, y = hol * 100, colour = mineral)) +
+  geom_abline(intercept = 0, slope = 1, colour = "grey") +
+  geom_point() +
+  coord_fixed() +
+  facet_wrap( ~ model, nrow = 1) +
+  labs(x = "Fitted",
+       y = "Measured") +
+  guides(colour = guide_legend(title = "Mineral rich samples")) +
+  theme(legend.position = "bottom")
+```
+
+
+```{r m-p-coefficients}
+## plot to compare coefficients of the best models
+
+# Holocellulose
+m1.10_pars <- 
+  m1.10 %>%
+  as.data.frame() %>%
+  dplyr::select(dplyr::contains("b_V"))
+
+m1.10_pars <- 
+  m1.10_pars %>%
+  purrr::map_df(function(x) {
+    res <- quantile(x, c(0.5, 0.05, 0.95))
+    tibble::tibble(
+      median = res[[1]],
+      lwr = res[[2]],
+      upr = res[[3]]
+    )
+  }) %>%
+  dplyr::mutate(
+    par_name = colnames(m1.10_pars),
+    wn = d_underfitting_flat[[4]]$x,
+    variable_y = "Holocellulose (no minerals)"
+  )
+
+m1.13_pars <- 
+  m1.13 %>%
+  as.data.frame() %>%
+  dplyr::select(dplyr::contains("b_V"))
+
+m1.13_pars <- 
+  m1.13_pars %>%
+  purrr::map_df(function(x) {
+    res <- quantile(x, c(0.5, 0.05, 0.95))
+    tibble::tibble(
+      median = res[[1]],
+      lwr = res[[2]],
+      upr = res[[3]]
+    )
+  }) %>%
+  dplyr::mutate(
+    par_name = colnames(m1.13_pars),
+    wn = d_underfitting_flat[[4]]$x,
+    variable_y = "Holocellulose (with minerals)"
+  )
+
+# Klason lignin
+m2.7_pars <- 
+  m2.7 %>%
+  as.data.frame() %>%
+  dplyr::select(dplyr::contains("b_V"))
+
+m2.7_pars <- 
+  m2.7_pars %>%
+  purrr::map_df(function(x) {
+    res <- quantile(x, c(0.5, 0.05, 0.95))
+    tibble::tibble(
+      median = res[[1]],
+      lwr = res[[2]],
+      upr = res[[3]]
+    )
+  }) %>%
+  dplyr::mutate(
+    par_name = colnames(m2.7_pars),
+    wn = d_underfitting_flat[[1]]$x,
+    variable_y = "Klason lignin"
+  )
+
+# combine
+m_pars <-
+  dplyr::bind_rows(
+    m1.10_pars,
+    m1.13_pars,
+    m2.7_pars
+  )
+
+# plots
+p_coefficients <-
+  m_pars %>%
+  ggplot(aes(x = wn, y = median)) +
+  geom_ribbon(data = d_peat$spectra[[1]], aes(x = x, y = y * 200 + 0.4, ymax = y * 200 + 0.4, ymin = rep(0.4, length(y))), colour = NA, fill = "lightgrey", alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = 2, colour = "grey") +
+  geom_errorbar(aes(ymin = lwr, ymax = upr), colour = "lightblue", width = 0) +
+  geom_point(shape = 21, fill = "white", colour = "grey50") +
+  facet_wrap(~ variable_y, scales = "free_x") +
+  geom_text_repel(data = m_pars %>%
+                    dplyr::mutate(label = ifelse(abs(median) >= 0.02, wn %>% round(0), "")),
+                  aes(label = label),
+                  segment.colour = "grey50") +
+  labs(x = expression(Bin~wavenumber~"["*cm^{-1}*"]"),
+       y = "Coefficient")
+```
+
+```{r m-model-validation}
+d_models <-
+  tibble::tibble(
+    model = list(m1.2, m1.3, m1.5, m1.6, m1.7, m1.8, m1.9, m1.10, m1.11, m1.12, m1.13, 
+                 m2.2, m2.3, m2.5, m2.6, m2.7, m2.8, m2.9, m2.10, m2.11),
+    model_type = purrr::map_chr(model, function(x) class(x)[[1]]),
+    variable_y = c(rep("Holocellulose", 11), rep("Klason lignin", 9)),
+    n_divergent_transitions = 
+      purrr::map2_dbl(model, model_type, function(x, y) {
+        switch(y,
+               "brmsfit" = sum(rstan::get_divergent_iterations(x$fit)),
+               "stanreg" = sum(rstan::get_divergent_iterations(x$stanfit)),
+               stop("Unknown model type.")
+        )
+      }
+      )
+  ) %>%
+  dplyr::select(-model)
+```
+

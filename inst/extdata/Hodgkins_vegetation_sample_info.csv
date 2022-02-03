@@ -1,0 +1,40 @@
+"sample_name","species_name","plant_part","sampling_date","site_name","site_peat_name","notes","holocellulose_hodgkins","klason_lignin_hodgkins"
+"P_1_A_BRose_AG_Leaves","Andromeda polifolia","leaf","June 2015","Stordalen (palsa)","Stordalen","",26,31
+"P_1_A_BRose_AG_Stems","Andromeda polifolia","stem","June 2015","Stordalen (palsa)","Stordalen","",48,26
+"P_1_A_Cloud_AG_Leaves","Rubus chamaemorus","leaf","June 2015","Stordalen (palsa)","Stordalen","",23,26
+"P_5_CN_Cloud_AG_Leaves","Rubus chamaemorus","leaf","July 2015","Stordalen (palsa)","Stordalen","",33,27
+"P_1_A_Cloud_AG_Stems","Rubus chamaemorus","stem","June 2015","Stordalen (palsa)","Stordalen","",47,29
+"P_3_A_Cloud_AG_Stems","Rubus chamaemorus","stem","June 2015","Stordalen (palsa)","Stordalen","",42,29
+"P_2_CN_Crow_AG_Leaves","Empetrum nigrum","leaf","July 2015","Stordalen (palsa)","Stordalen","",38,28
+"P_1_CN_Crow_AG_Stems","Empetrum nigrum","stem","July 2015","Stordalen (palsa)","Stordalen","",44,28
+"P_5_A_DBirch_AG_Stems","Betula nana","stem","June 2015","Stordalen (palsa)","Stordalen","",42,26
+"P_5_A_Lingon_AG_Stems","Vaccinium vitis-idaea","stem","June 2015","Stordalen (palsa)","Stordalen","",43,31
+"P_3_A_Lichen_AG","Lichen (unidentified)","whole plant","June 2015","Stordalen (palsa)","Stordalen","",47,23
+"P_3_A_MossA_AG","Moss (unidentified)","whole plant","June 2015","Stordalen (palsa)","Stordalen","",47,22
+"P_2_A_SphagFusc_AG","Sphagnum fuscum","whole plant","June 2015","Stordalen (palsa)","Stordalen","",53,22
+"T3Far_Sphagnum","Sphagnum (unidentified)","whole plant","July 2012","S1 Bog","MN Bogs","",51,23
+"Spruce_May2016_Green.Sphagnum.angustifolium","Sphagnum angustifolium","whole plant","May 2016","S1 Bog","MN Bogs","",56,21
+"Spruce_May2016_Red.Sphagnum.magellanicum","Sphagnum magellanicum","whole plant","May 2016","S1 Bog","MN Bogs","",52,24
+"Spruce_May2016_Eriophorum.vaginatum","Eriophorum vaginatum","stems and leaves","May 2016","S1 Bog","MN Fens","",49,26
+"Spruce_May2016_Eriophorum.viridicarinatum","Eriophorum viridicarinatum","stems and leaves","May 2016","S1 Bog","MN Fens","",43,31
+"Spruce_May2016_Carex.Trisperma","Carex trisperma","stems and leaves","May 2016","S1 Bog","MN Fens","",49,26
+"E_1_A_CarexRot_AG","Carex rotundata","stems and leaves","June 2015","Stordalen (fen)","MN Fens","",51,26
+"E_2_A_ErioAng_AG","Eriophorum angustifolium","stems and leaves","June 2015","Stordalen (fen)","MN Fens","",50,24
+"E_4_A_ErioAng.Litter_AG","Eriophorum angustifolium","stems and leaves","June 2015","Stordalen (fen)","MN Fens","litter",60,23
+"E_2_CN_ErioAng_AG","Eriophorum angustifolium","stems and leaves","July 2015","Stordalen (fen)","MN Fens","",51,23
+"E_3_CN_ErioAng_AG","Eriophorum angustifolium","stems and leaves","July 2015","Stordalen (fen)","MN Fens","",44,25
+"Pocosin_Pinus","Pinus serotina ","leaf","May 2015","NC Pocosin","NC Pocosin","",33,27
+"Pocosin_Ilex_inkberry","Ilex glabra ","leaf","May 2015","NC Pocosin","NC Pocosin","",29,26
+"Pocosin_Persia","Persea palustris","leaf","May 2015","NC Pocosin","NC Pocosin","",26,29
+"Pocosin_Gordonia_stem","Gordonia lasianthus ","stem","May 2015","NC Pocosin","NC Pocosin","",38,27
+"Pocosin_Lyonia","Lyonia lucida ","leaf","May 2015","NC Pocosin","NC Pocosin","",32,28
+"Pocosin_Vaccinium","Vaccinium formosum","leaf","May 2015","NC Pocosin","NC Pocosin","",25,25
+"Everglades_Cladium_sawgrass","Cladium mariscus ssp. jamaicense","stems and leaves","October 2015","Loxahatchee","Loxahatchee","",49,29
+"Brunei.Leaf.1","Shorea albida","leaf","","Badas, Brunei","Mendaram","litter",28,34
+"Brunei.Leaf.5","Shorea albida","leaf","","Badas, Brunei","Mendaram","litter",35,37
+"Brunei.Leaf.6","Shorea albida","leaf","","Badas, Brunei","Mendaram","litter",31,36
+"Brunei.Leaf.10","Shorea albida","leaf","","Badas, Brunei","Mendaram","litter",25,29
+"Brunei.S3.P7.Wood.Block","Shorea albida","wood","Feb. 2012 - Aug. 2015","Mendaram","Mendaram","buried wood block",42,28
+"Brunei.S4.P7.B120.Wood.Block","Shorea albida","wood","Feb. 2012 - Aug. 2015","Mendaram","Mendaram","buried wood block",49,26
+"Brunei.S28.P6.B205.Wood.Block","Shorea albida","wood","Feb. 2012 - Aug. 2015","Mendaram","Mendaram","buried wood block",40,23
+"Brunei.S29.P6.B212.Wood.Block","Shorea albida","wood","Feb. 2012 - Aug. 2015","Mendaram","Mendaram","buried wood block",50,26

@@ -1,0 +1,1106 @@
+```{r m-reduce-underfitting-1}
+### reduce undrfitting by including additional variables provided by the algorithm from Hodgkins et al. 2018 into the models
+
+## Holocellulose
+
+# same as m1.3, but with additional predictors
+m1.5 <- 
+  brms::brm(hol ~ carb + arom15 + arom16 + acids + aliph28 + aliph29 + trough16 + trough28, 
+            data = d %>% dplyr::filter(sample_type != "old magazines"), 
+            family = Beta(link = "logit", link_phi = "log"),
+            prior = brms_beta_priors,
+            chains = chains,
+            seed = seed,
+            iter = iter,
+            warmup = warmup)
+
+# same as m1.5, but more regularizing priors
+brms_beta_priors1 <-
+  c(
+    brms::prior_string("normal(0, 0.5)", class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.6 <- 
+  update(m1.5, prior = brms_beta_priors1,
+         seed = seed)
+
+# compute loos
+m1.5_loo <- loo(m1.5, reloo = TRUE)
+m1.6_loo <- loo(m1.6, reloo = TRUE)
+
+## Klason lignin
+
+# Same as m2.3, but with additional predictors
+m2.5 <- 
+  brms::brm(kl ~ carb + arom15 + arom16 + acids + aliph28 + aliph29 + trough16 + trough28, 
+            data = d %>% dplyr::filter(sample_type != "office paper"), 
+            family = Beta(link = "logit", link_phi = "log"),
+            prior = brms_beta_priors,
+            chains = chains,
+            seed = seed,
+            iter = iter,
+            warmup = warmup)
+
+# same as m2.5, but more regularizing priors
+m2.6 <- update(m2.5, prior = brms_beta_priors1,
+               seed = seed)
+
+# compute loos
+m2.5_loo <- loo(m2.5, reloo = TRUE)
+m2.6_loo <- loo(m2.6, reloo = TRUE)
+```
+
+```{r m-reduce-underfitting-2}
+### reduce underfitting by using the complete initial spectrum binned with varying bin widths ranging from 10 to 100 and using regularizing priors
+
+# define bin widths
+bin_widths <- c(10, 20, 30, 50, 100)
+
+# create binned datasets
+d_underfitting_flat <-
+  purrr::map(bin_widths, function(x) {
+    d %>%
+      ir::ir_bin(width = x) %>%
+      ir::ir_flatten()
+  })
+
+d_underfitting <- 
+  purrr::map(d_underfitting_flat, function(x) {
+    d %>%
+      dplyr::select(hol, kl) %>%
+      dplyr::bind_cols(
+        x %>%
+          dplyr::select(-1) %>%
+          t() %>%
+          as.data.frame() %>%
+          scale(center = TRUE, scale = TRUE) %>%
+          as.data.frame()
+      )
+  })
+
+# define regularized horsheshoe prior
+prior_hs_tau0 <-
+  purrr::map_dbl(d_underfitting, function(x) {
+    n <- nrow(x) - 4L # in each case, four observations are removed
+    p <- ncol(x) - 2L # two target variables have to be subtracted
+    p0 <- 8L # prior guess for the number of relevant variables
+    p0/(p-p0) * 1/sqrt(n) # tau0
+  })
+```
+
+```{r m-reduce-underfitting-3}
+## Holocellulose
+
+# fit models
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[1]], ", df_global = 1, autoscale = TRUE)"),
+                       class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.7 <- 
+  brms::brm(
+    hol ~ ., 
+    data = 
+      d_underfitting[[1]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines"),
+    family = Beta(link = "logit", link_phi = "log"),
+    prior = brms_beta_priors2,
+    cores = chains,
+    chains = chains,
+    warmup = warmup,
+    iter = iter,
+    seed = seed ,
+    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 6 divergent transitions, low bulk ESS; with adapt_delta = 0.99: There were 183 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10, low bulk ESS
+  ) 
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[2]], ", df_global = 1, autoscale = TRUE)"),
+                       class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.8 <- 
+  brms::brm(
+    hol ~ ., 
+    data = 
+      d_underfitting[[2]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines"),
+    family = Beta(link = "logit", link_phi = "log"),
+    prior = brms_beta_priors2,
+    cores = chains,
+    chains = chains,
+    warmup = warmup,
+    iter = iter,
+    seed = seed,
+    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 5 divergent transitions; with adapt_delta = 0.99: There were 3994 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10
+  ) 
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[3]], ", df_global = 1, autoscale = TRUE)"),
+                       class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.9 <- 
+  brms::brm(
+    hol ~ ., 
+    data = 
+      d_underfitting[[3]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines"),
+    family = Beta(link = "logit", link_phi = "log"),
+    prior = brms_beta_priors2,
+    cores = chains,
+    chains = chains,
+    warmup = warmup,
+    iter = iter,
+    seed = seed,
+    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 11 divergent transitions; adapt_delta = 0.99: There were 2000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10
+  ) 
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[4]], ", df_global = 1, autoscale = TRUE)"),
+                       class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.10 <- 
+  brms::brm(
+    hol ~ ., 
+    data = 
+      d_underfitting[[4]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines"),
+    family = Beta(link = "logit", link_phi = "log"),
+    prior = brms_beta_priors2,
+    cores = chains,
+    chains = chains,
+    warmup = warmup,
+    iter = iter,
+    seed = seed,
+    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 8 divergent transitions; adapt_delta = 0.99: There were 1840 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10.
+  ) 
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[5]], ", df_global = 1, autoscale = TRUE)"),
+                       class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m1.11 <- 
+  brms::brm(
+    hol ~ ., 
+    data = 
+      d_underfitting[[5]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines"),
+    family = Beta(link = "logit", link_phi = "log"),
+    prior = brms_beta_priors2,
+    cores = chains,
+    chains = chains,
+    warmup = warmup,
+    iter = iter,
+    seed = seed,
+    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 17 divergent transitions; adapt_delta = 0.99: no sampling issues
+  ) 
+```
+
+```{r m-reduce-underfitting-4}
+## Klason lignin
+
+# fit models
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[1]], ", df_global = 1, autoscale = TRUE)"),
+                                             class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m2.7 <- 
+  brms::brm(
+    kl ~ ., 
+                  data = 
+                    d_underfitting[[1]] %>% 
+                    dplyr::select(-hol) %>% 
+                    dplyr::filter(d$sample_type != "office paper"),
+                  family = Beta(link = "logit", link_phi = "log"),
+                  prior = brms_beta_priors2,
+                  cores = chains,
+                  chains = chains,
+                  warmup = warmup,
+                  iter = iter,
+                  seed = seed,
+                  control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 49 divergent transitions; adapt_delta = 0.99: There were 7136 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. Low bulk ESS
+    ) 
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[2]], ", df_global = 1, autoscale = TRUE)"),
+                                             class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m2.8 <- 
+  brms::brm(
+  kl ~ ., 
+                  data = 
+                    d_underfitting[[2]] %>% 
+                    dplyr::select(-hol) %>% 
+                    dplyr::filter(d$sample_type != "office paper"),
+                  family = Beta(link = "logit", link_phi = "log"),
+                  prior = brms_beta_priors2,
+                  cores = chains,
+                  chains = chains,
+                  warmup = warmup,
+                  iter = iter,
+                  seed = seed,
+                  control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 136 divergent transitions and low tail ESS; adapt_delta = 0.99: 3 divergent transitions. There were 2000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. 
+  ) 
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[3]], ", df_global = 1, autoscale = TRUE)"),
+                                             class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m2.9 <- brms::brm(kl ~ ., 
+                  data = 
+                    d_underfitting[[3]] %>% 
+                    dplyr::select(-hol) %>% 
+                    dplyr::filter(d$sample_type != "office paper"),
+                  family = Beta(link = "logit", link_phi = "log"),
+                  prior = brms_beta_priors2,
+                  cores = chains,
+                  chains = chains,
+                  warmup = warmup,
+                  iter = iter,
+                  seed = seed,
+                  control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 452 divergent transitions and low tail ESS; adapt_delta = 0.99: 5 divergent transitions. There were 1631 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10.
+                  )  
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[4]], ", df_global = 1, autoscale = TRUE)"),
+                                             class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m2.10 <- brms::brm(kl ~ ., 
+                   data = 
+                     d_underfitting[[4]] %>% 
+                     dplyr::select(-hol) %>% 
+                     dplyr::filter(d$sample_type != "office paper"),
+                   family = Beta(link = "logit", link_phi = "log"),
+                   prior = brms_beta_priors2,
+                   cores = chains,
+                   chains = chains,
+                   warmup = warmup,
+                   iter = iter,
+                   seed = seed,
+                  control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 267 divergent transitions, low tail ESS; adapt_delta = 0.99: 7 divergent transitions 
+                  )  
+
+brms_beta_priors2 <-
+  c(
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[5]], ", df_global = 1, autoscale = TRUE)"),
+                                             class = "b"),
+    brms::prior_string("normal(0, 2.5)", class = "Intercept"),
+    brms::prior_string("gamma(0.01, 0.01)", class = "phi")
+  )
+
+m2.11 <- brms::brm(kl ~ ., 
+                   data = 
+                     d_underfitting[[5]] %>% 
+                     dplyr::select(-hol) %>% 
+                     dplyr::filter(d$sample_type != "office paper"),
+                   family = Beta(link = "logit", link_phi = "log"),
+                   prior = brms_beta_priors2,
+                   cores = chains,
+                   chains = chains,
+                   warmup = warmup,
+                   iter = iter,
+                   seed = seed,
+                  control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 81 divergent transitions; adapt_delta = 0.99: no sampling issues
+                  ) 
+```
+
+
+```{r m-reduce-underfitting-5-1}
+# compute loos
+m1.7_loo <- loo(m1.7, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-5-2}
+m1.8_loo <- loo(m1.8, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-5-3}
+m1.9_loo <- loo(m1.9, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-5-4}
+m1.10_loo <- loo(m1.10, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-5-5}
+m1.11_loo <- loo(m1.11, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-6-1}
+# compute loos
+m2.7_loo <- loo(m2.7, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-6-2}
+m2.8_loo <- loo(m2.8, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-6-3}
+m2.9_loo <- loo(m2.9, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-6-4}
+m2.10_loo <- loo(m2.10, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-6-5}
+m2.11_loo <- loo(m2.11, reloo = TRUE, cores = chains)
+```
+
+```{r m-reduce-underfitting-7}
+### create the tables summarizing the predictive performance comparison
+
+# table with loo results
+loo_comparison <-
+  tibble::tibble(
+    variably_y = c("Holocellulose", "Klason lignin"),
+    loo_comparison = 
+      list(
+        loo::loo_compare(list(m1.2_loo, m1.3_loo, m1.5_loo, m1.6_loo, m1.7_loo, m1.8_loo, m1.9_loo, m1.10_loo, m1.11_loo)),
+        loo::loo_compare(list(m2.2_loo, m2.3_loo, m2.5_loo, m2.6_loo, m2.7_loo, m2.8_loo, m2.9_loo, m2.10_loo, m2.11_loo))
+      )
+  )
+
+## create table for printing
+
+# holocellulose
+loo_comparison_hol <-
+  loo_comparison %>%
+  dplyr::filter(variably_y == "Holocellulose") %>%
+  dplyr::pull(loo_comparison) %>%
+  as.data.frame() %>%
+  dplyr::select(1:3) %>%
+  dplyr::mutate(dplyr::across(dplyr::everything(), round, 1)) %>%
+  dplyr::mutate(
+    y_variable = "Holocellulose",
+    model_code = rownames(.),
+    bin_width = c(50, 100, 30, 10, rep("-", 4), 20),
+    family = c(rep("Beta", 7), "Gaussian", "Beta"),
+    original_model = c(rep(FALSE, 6), TRUE, TRUE, FALSE),
+    prior_scale = c(rep("-", 4), 0.5, 2.5, 2.5, 2.5, "-"),
+    variables = ifelse(bin_width == "-", "peaks", "bins")
+  )
+
+# Klason lignin
+loo_comparison_kl <-
+  loo_comparison %>%
+  dplyr::filter(variably_y == "Klason lignin") %>%
+  dplyr::pull(loo_comparison) %>%
+  as.data.frame() %>%
+  dplyr::select(1:3) %>%
+  dplyr::mutate(dplyr::across(dplyr::everything(), round, 1)) %>%
+  dplyr::mutate(
+    y_variable = "Klason lignin",
+    model_code = rownames(.),
+    bin_width = c(10, rep("-", 4), 30, 20, 100, 50),
+    family = c(rep("Beta", 3), "Gaussian", rep("Beta", 5)),
+    original_model = c(rep(FALSE, 3), TRUE, TRUE, rep(FALSE, 4)),
+    prior_scale = c("-", 0.5, 2.5, 2.5, 2.5, rep("-", 4)),
+    variables = ifelse(bin_width == "-", "peaks", "bins")
+  )
+
+## combine
+loo_comparison_res_colindex <- 
+  c("model_code", "original_model", "family", "variables", "prior_scale", "bin_width", "elpd_loo", "elpd_diff", "se_diff")
+
+loo_comparison_res <-
+  dplyr::bind_rows(
+    loo_comparison_hol %>%
+      dplyr::select(dplyr::all_of(loo_comparison_res_colindex)),
+    loo_comparison_kl %>%
+      dplyr::select(dplyr::all_of(loo_comparison_res_colindex))
+  ) %>%
+  tibble::remove_rownames() %>%
+  kableExtra::kable(booktabs = TRUE, 
+                    col.names = c("Model", "Original model?", "Distribution", "Predictors", "Prior scale", "Bin width", "ELPD", "$\\Delta$ELPD", "$\\Delta$SE"), 
+                    escape = FALSE,
+                    caption = 'Overview on the relative predictive performance of the models for holocellulose and Klason lignin content as measured using PSIS-LOO ELPD. For each variable, the model with the best average predictive performance (largest ELPD) is at the top and the other models follow in descending order. Models ending in ".2" and ".3" are the models with the original model structure as developed by \\cite{Hodgkins.2018} (column "Original model?"). "Distribution" is the distribution assumed for the target variable. "Predictors" indicates if models were fitted with peaks extracted using the procedure of \\cite{Hodgkins.2018} ("peaks") or using binned spectra ("bins"). "Prior" scale indicates the standard deviation for Gaussian coefficients (numeric values), or that flat priors were assumed ("flat") or regularized horseshoe priors were used ("-"). "Bin width" is the width of bins (in wavenumber units). "ELPD" is the PSIS-LOO expected log-predictive density, $\\Delta$ELPD the difference in ELPD relative to the best average model, and $\\Delta$SE the standard error in the average $\\Delta$ELPD. \\label{tab:res-tab-loo-comparison-res}') %>%
+  kableExtra::kable_styling(latex_options = c("hold_position"), position = "center") %>%
+  kableExtra::pack_rows("Holocellulose", 1, 9) %>%
+  kableExtra::pack_rows("Klason lignin", 10, 8)
+```
+
+```{r m-reduce-underfitting-8}
+### compute predictions for peat profiles comparing the "best" model and th original Beta regression model
+
+## create data sets for predictions
+
+# bin width: 50
+d_peat_bin50_scale <-
+  d_underfitting_flat[[4]] %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = TRUE, scale = TRUE)
+
+d_peat_bin50_scale <-
+  tibble::tibble(
+    center = attr(d_peat_bin50_scale, "scaled:center"),
+    scale = attr(d_peat_bin50_scale, "scaled:scale")
+  )
+
+d_peat_bin50_flat <-
+  d_peat %>%
+  ir::ir_bin(width = 50) %>%
+  ir::ir_flatten()
+
+d_peat_bin50 <- 
+  d_peat_bin50_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(
+    center = d_peat_bin50_scale$center, 
+    scale = d_peat_bin50_scale$scale
+  ) %>%
+  as.data.frame()
+
+# bin width: 10
+d_peat_bin10_scale <-
+  d_underfitting_flat[[1]] %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = TRUE, scale = TRUE)
+
+d_peat_bin10_scale <-
+  tibble::tibble(
+    center = attr(d_peat_bin10_scale, "scaled:center"),
+    scale = attr(d_peat_bin10_scale, "scaled:scale")
+  )
+
+d_peat_bin10_flat <-
+  d_peat %>%
+  ir::ir_bin(width = 10) %>%
+  ir::ir_flatten()
+
+d_peat_bin10 <- 
+  d_peat_bin10_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(
+    center = d_peat_bin10_scale$center, 
+    scale = d_peat_bin10_scale$scale
+  ) %>%
+  as.data.frame()
+
+# predictions
+d_peat_pred_best <- 
+  dplyr::bind_rows(
+    m1.10 %>%
+      rstanarm::posterior_predict(newdata = d_peat_bin50) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best binned spectra",
+        variable_y = "Holocellulose"
+      ),
+    m1.6 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best all peaks",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Original",
+        variable_y = "Holocellulose"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Original",
+        variable_y = "Klason lignin"
+      ),
+    m2.7 %>%
+      rstanarm::posterior_predict(newdata = d_peat_bin10) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best binned spectra",
+        variable_y = "Klason lignin"
+      ),
+    m2.6 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best all peaks",
+        variable_y = "Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1:6, function(x) {
+      tibble::tibble(
+        sample_id = d_peat$sample_id, 
+        core_label = d_peat$core_label,
+        sampling_longitude = d_peat$sampling_longitude, 
+        sampling_latitude = d_peat$sampling_latitude, 
+        sampling_altitude = d_peat$sampling_altitude, 
+        sample_depth_lower = d_peat$sample_depth_lower, 
+        sample_depth_upper = d_peat$sample_depth_upper
+      )
+    })
+  )
+
+# summarize across depth values to reproduce key plots in Hodgkins et al. 2018
+d_peat_pred_best_summary <-
+  d_peat_pred_best %>%
+  dplyr::filter(sample_depth_lower <= 50) %>%
+  dplyr::group_by(variable_y, model, core_label) %>%
+  dplyr::summarise(fit = mean(fit),
+                   lwr = mean(lwr),
+                   upr = mean(upr),
+                   sampling_latitude = mean(sampling_latitude))
+  
+
+# data frame to compare fitted with measured values across all models
+d_fitted_comparison <-
+  dplyr::bind_rows(
+    tibble::tibble(
+      y = 
+        d %>% 
+        dplyr::filter(sample_type != "old magazines") %>% 
+        dplyr::pull(hol) %>%
+        rep(4),
+      yhat = 
+        list(m1.2, m1.5, m1.10) %>%
+        purrr::map(function(x) {
+          apply(posterior_predict(x), 2, median)
+        }) %>%
+        unlist() %>%
+        c(m1.1 %>% predict(type = "response")),
+      model = rep(c("Original", "Best all peaks", "Best binned spectra", "Original non-Bayesian"), 
+                  each = d %>% dplyr::filter(sample_type != "old magazines") %>% nrow()),
+      y_variable = "Holocellulose"
+    ),
+    tibble::tibble(
+      y = 
+        d %>% 
+        dplyr::filter(sample_type != "office paper") %>% 
+        dplyr::pull(kl) %>%
+        rep(4),
+      yhat = 
+        list(m2.2, m2.6, m2.7) %>%
+        purrr::map(function(x) {
+          apply(posterior_predict(x), 2, median)
+        }) %>%
+        unlist() %>%
+        c(m2.1 %>% predict(type = "response")),
+      model = rep(c("Original", "Best all peaks", "Best binned spectra", "Original non-Bayesian"), 
+                  each = d %>% dplyr::filter(sample_type != "office paper") %>% nrow()),
+      y_variable = "Klason lignin"
+    )
+  )
+```
+
+```{r m-reduce-underfitting-9}
+## plot depth profiles
+p1 <-
+  d_peat_pred_best %>%
+  dplyr::filter(variable_y == "Holocellulose") %>%
+  ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
+             x = sample_depth_lower, 
+             colour = model, 
+             fill = model)) +
+  geom_ribbon(colour = NA, 
+              alpha = 0.2) +
+  geom_path() +
+  geom_hline(yintercept = 0, linetype = 2, colour = "grey") +
+  coord_flip() +
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"[mass-%]"),
+       x = "Lower layer boundary depth [cm]") +
+  facet_wrap(~ core_label, 
+             scales = "free_y", 
+             ncol = 2) +
+  scale_x_reverse()
+
+p2 <-
+  d_peat_pred_best %>%
+  dplyr::filter(variable_y == "Klason lignin") %>%
+  ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
+             x = sample_depth_lower, 
+             colour = model, 
+             fill = model)) +
+  geom_ribbon(colour = NA, 
+              alpha = 0.2) +
+  geom_path() +
+  geom_hline(yintercept = 0, linetype = 2, colour = "grey") +
+  coord_flip() +
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~content~"[mass-%]"),
+       x = "Lower layer boundary depth [cm]") +
+  facet_wrap(~ core_label, 
+             scales = "free_y", 
+             ncol = 2) +
+  scale_x_reverse()
+
+# combine plots
+p_gaussian_beta_depth_profile_best <-
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+### Reproduce plots in Hodgkins et al. 2018
+
+## contents vs latitude across sites
+p1 <-
+  d_peat_pred_best_summary %>%
+  dplyr::filter(variable_y == "Holocellulose" & model != "Best all peaks") %>%
+  ggplot(aes(y = fit, x = sampling_latitude, colour = model)) +
+  geom_errorbar(aes(ymin = lwr, ymax = upr)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x) +
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"["*g/g[sample]*"]"),
+       x = expression("Latitude ["*degree*N*"]")) +
+  guides(colour = guide_legend(title = "Model"))
+
+p2 <-
+  d_peat_pred_best_summary %>%
+  dplyr::filter(variable_y == "Klason lignin" & model != "Best all peaks") %>%
+  ggplot(aes(y = fit, x = sampling_latitude, colour = model)) +
+  geom_errorbar(aes(ymin = lwr, ymax = upr)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x) +
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~content~"["*g/g[sample]*"]"),
+       x = expression("Latitude ["*degree*N*"]")) +
+  guides(colour = guide_legend(title = "Model"))
+
+# combine
+p_sites_latitude <- 
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+## depth profiles for two latitude classes
+p1 <- 
+  d_peat_pred_best %>%
+    dplyr::arrange(sample_depth_lower) %>%
+    dplyr::filter(variable_y == "Holocellulose" & model != "Best all peaks") %>%
+    ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
+               x = sample_depth_lower, 
+               colour = sampling_latitude >45, 
+               fill = sampling_latitude >45)) +
+    geom_hline(yintercept = c(0.09, 0.14, 0.21, 0.43), colour = "grey", linetype = 2) +
+    geom_smooth(method = "loess", formula = y ~ x) +
+    coord_flip() +
+    labs(title = "Holocellulose", 
+         y = expression(Holocellulose~content~"["*g/g[sample]*"]"),
+         x = "Lower layer boundary depth [cm]") +
+    facet_wrap(~ model, 
+               scales = "free_y", 
+               ncol = 1) +
+    scale_x_reverse() + 
+  guides(colour = guide_legend(title = expression(Latitude>45~degree*N)),
+         fill = guide_legend(title = expression(Latitude>45~degree*N)))
+
+p2 <- 
+  d_peat_pred_best %>%
+    dplyr::arrange(sample_depth_lower) %>%
+    dplyr::filter(variable_y == "Klason lignin" & model != "Best all peaks") %>%
+    ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
+               x = sample_depth_lower, 
+               colour = sampling_latitude >45, 
+               fill = sampling_latitude >45)) +
+    geom_hline(yintercept = c(0.22, 0.34, 0.38, 0.53), colour = "grey", linetype = 2) +
+    geom_smooth(method = "loess", formula = y ~ x) +
+    coord_flip() +
+    labs(title = "Klason lignin", 
+         y = expression(Klason~lignin~content~"["*g/g[sample]*"]"),
+         x = "Lower layer boundary depth [cm]") +
+    facet_wrap(~ model, 
+               scales = "free_y", 
+               ncol = 1) +
+    scale_x_reverse() + 
+  guides(colour = guide_legend(title = expression(Latitude>45~degree*N)),
+         fill = guide_legend(title = expression(Latitude>45~degree*N)))
+
+# combine
+p_depth_profiles_latitude <- 
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+### plot fitted vs measured values
+p1 <-
+  d_fitted_comparison %>%
+  dplyr::filter(y_variable == "Holocellulose" & model != "Original non-Bayesian") %>%
+  dplyr::mutate(model = factor(model, levels = c("Original", "Best binned spectra", "Best all peaks"))) %>%
+ggplot(aes(y = y, x = yhat)) +
+  geom_abline(intercept = 0, slope = 1, colour = "grey50") +
+  geom_point() +
+  geom_smooth(method = "loess", formula = y ~ x, colour = "grey50") +
+  labs(title = "Holocellulose", 
+       x = "Fitted",
+       y = "Measured") +
+  coord_fixed(ratio = 1) +
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  facet_wrap( ~ model)
+
+p2 <-
+  d_fitted_comparison %>%
+  dplyr::filter(y_variable == "Klason lignin" & model != "Original non-Bayesian") %>%
+  dplyr::mutate(model = factor(model, levels = c("Original", "Best binned spectra", "Best all peaks"))) %>%
+ggplot(aes(y = y, x = yhat)) +
+  geom_abline(intercept = 0, slope = 1, colour = "grey50") +
+  geom_point() +
+  geom_smooth(method = "loess", formula = y ~ x, colour = "grey50") +
+  labs(title = "Klason lignin", 
+       x = "Fitted",
+       y = "Measured") +
+  coord_fixed(ratio = 1) +
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  facet_wrap( ~ model)
+
+# combine plots
+p_y_yhat_best <-
+  p1 / p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+```{r m-reduce-underfitting-10}
+### compute predictions for vegetation samples comparing the "best" model and th original Gaussian regression model
+
+# bin width: 50
+d_veg_bin50_flat <-
+  d_veg %>%
+  ir::ir_bin(width = 50) %>%
+  ir::ir_flatten()
+
+d_veg_bin50 <- 
+  d_veg_bin50_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = d_peat_bin50_scale$center, 
+        scale = d_peat_bin50_scale$scale) %>%
+  as.data.frame()
+
+# bin width: 10
+d_veg_bin10_flat <-
+  d_veg %>%
+  ir::ir_bin(width = 10) %>%
+  ir::ir_flatten()
+
+d_veg_bin10 <- 
+  d_veg_bin10_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = d_peat_bin10_scale$center, 
+        scale = d_peat_bin10_scale$scale) %>%
+  as.data.frame()
+
+# predictions
+d_veg_pred_best <- 
+  dplyr::bind_rows(
+    m1.10 %>%
+      rstanarm::posterior_predict(newdata = d_veg_bin50) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best binned spectra",
+        variable_y = "Holocellulose"
+      ),
+    m1.6 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best all peaks",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Original",
+        variable_y = "Holocellulose"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Original",
+        variable_y = "Klason lignin"
+      ),
+    m2.7 %>%
+      rstanarm::posterior_predict(newdata = d_veg_bin10) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best binned spectra",
+        variable_y = "Klason lignin"
+      ),
+    m2.6 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best all peaks",
+        variable_y = "Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1:6, function(x) {
+      tibble::tibble(
+        sample_id = d_veg$sample_id, 
+        site_name = d_veg$site_name,
+        species_name = d_veg$species_name,
+        plant_part = d_veg$plant_part
+      )
+    })
+  )
+
+# plot comparing vegetation predictions
+p_veg_species <-
+  d_veg_pred_best %>%
+  dplyr::filter(model != "Best all peaks") %>%
+  dplyr::mutate(
+    species_name_numeric = as.factor(species_name) %>% as.integer() %>% magrittr::add(ifelse(model == "Original", 0.2, -0.2))
+  ) %>%
+  ggplot(aes(x = species_name_numeric, y = fit, ymin = lwr, ymax = upr, colour = model)) +
+  # geom_errorbar(position = position_jitterdodge(0.9, jitter.height = 0, jitter.width = 0.4, seed = 1), width = 0) +
+  geom_ribbon(aes(group = sample_id), fill = "grey", alpha = 0.4, colour = NA) +
+  geom_path(aes(group = sample_id), colour = "grey") +
+  geom_point() +
+  coord_flip() +
+  geom_vline(xintercept = seq(from = 1.5, by = 1, length.out = length(unique(d_veg_pred_best$species_name)) - 1), colour = "grey", linetype = 2) +
+  labs(x = "Species",
+       y = expression("Predicted content [mass-%]")) +
+  facet_grid(~ variable_y, scales = "free") +
+  theme(legend.position = "bottom") +
+  guides(colour = guide_legend(title = "Model", ncol = 1)) + 
+  scale_x_continuous(
+    breaks = seq(from = 1,  by = 1, length.out = length(unique(d_veg_pred_best$species_name))),
+    labels = levels(as.factor(d_veg_pred_best$species_name))
+  ) +
+  scale_y_continuous(labels = function(x) x * 100)
+  
+
+# classify sites so that they match the site-vegetation classification in Hodgkins et al. 2018
+d_peat_pred_best <-
+  d_peat_pred_best %>%
+  dplyr::left_join(
+    tibble::tibble(
+      core_label = unique(d_peat_pred_best$core_label),
+      barchart_label = c("Boreal fens", "Stordalen", "NC Pocosin", "NC Pocosin", "Loxahatchee", "Loxahatchee", "Boreal bogs", "Boreal bogs", "Mendaram", "Mendaram", "Boreal bogs", "Boreal fens", "Boreal bogs", "Boreal bogs")
+    ),
+    by = "core_label"
+  )
+
+d_veg_pred_best <-
+  d_veg_pred_best %>% 
+  dplyr::left_join(
+    tibble::tibble(
+      site_name = unique(d_veg_pred_best$site_name),
+      barchart_label = c("Stordalen", "Boreal bogs", "Boreal fens", "NC Pocosin", "Loxahatchee", "Mendaram", "Mendaram")
+    ),
+    by = "site_name"
+  )
+ 
+d_barchart1 <-
+  dplyr::bind_rows(
+    d_peat_pred_best %>%
+      dplyr::filter(sample_depth_lower <= 50) %>%
+      dplyr::mutate(sample_type = "Peat"),
+    d_veg_pred_best %>%
+      dplyr::mutate(sample_type = "Vegetation"),
+  ) %>%
+  dplyr::mutate(barchart_label = factor(barchart_label, levels = c("Stordalen", "Boreal bogs", "Boreal fens", "NC Pocosin", "Loxahatchee", "Mendaram") %>% rev()),
+                sample_type = factor(sample_type, levels = c("Vegetation", "Peat", "Difference")))
+
+# compute difference between median vegetation and peat signature
+d_barchart1 <-
+  d_barchart1 %>%
+  dplyr::group_by(variable_y, model, barchart_label, sample_type) %>%
+  dplyr::summarise(fit_median = median(fit), lwr = fit_median - sd(fit), upr = fit_median + sd(fit))
+d_barchart1 <-
+  dplyr::bind_rows(
+    d_barchart1,
+    d_barchart1 %>%
+      dplyr::group_by(variable_y, model, barchart_label) %>%
+      dplyr::summarise(fit_median = fit_median[sample_type == "Peat"] - fit_median[sample_type == "Vegetation"],
+                       sample_type = "Difference")
+  )
+
+# plots
+p1 <- 
+  d_barchart1 %>%
+  dplyr::filter(variable_y == "Holocellulose" & model != "Best all peaks") %>%
+  ggplot(aes(y = fit_median, ymin = lwr, ymax = upr,
+             x = barchart_label,
+             fill = sample_type)) +
+  geom_errorbar(colour = "grey", width = 0.2, position = position_dodge(.9)) +
+  geom_hline(yintercept = c(-0.2, 0, 0.2, 0.4), colour = "grey", linetype = 2) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"["*g/g[sample]*"]"),
+       x = "Site category") +
+  facet_wrap(~ model) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_grey()
+
+p2 <- 
+  d_barchart1 %>%
+  dplyr::filter(variable_y == "Klason lignin" & model != "Best all peaks") %>%
+  ggplot(aes(y = fit_median, ymin = lwr, ymax = upr,
+             x = barchart_label,
+             fill = sample_type)) +
+  geom_errorbar(colour = "grey", width = 0.2, position=position_dodge(.9)) +
+  geom_hline(yintercept = c(0, 0.2, 0.4), colour = "grey", linetype = 2) +
+  geom_bar(stat = "identity", position=position_dodge()) +
+  coord_flip() +
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~"["*g/g[sample]*"]"),
+       x = "Site category") +
+  facet_wrap(~ model) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_grey()
+
+# combine plots
+p_veg_peat_difference <-
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+

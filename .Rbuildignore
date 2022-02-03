@@ -1,0 +1,12 @@
+^renv$
+^renv\.lock$
+^data-raw$
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^analysis$
+^Readme\.md$
+^Readme\.Rmd$
+^License\.md$
+^CONTRIBUTING\.md$
+^CONDUCT\.md$

@@ -1,0 +1,56 @@
+Package: hklmirs
+Title: Reproducible Research Compendium for "Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid Infrared Spectra" and "Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging". 
+Version: 0.0.0.9000
+Authors@R:
+    c(
+    person(given = "Henning",
+           family = "Teickner",
+           role = c("aut", "cre"),
+           email = "h_teic01@uni-muenster.de",
+           comment = "0000-0002-3993-1182"),
+    person(given = "Klaus-Holger",
+           family = "Knorr",
+           role = c("aut"), 
+           email = "kh.knorrr@wwu.de"))
+Description: 
+    Reproducible Research Compendium for "Improving Models to Predict 
+    Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with 
+    Mid Infrared Spectra" and "Predicting Absolute Holocellulose and Klason 
+    Lignin Contents for Peat Remains Challenging". In these two manuscripts, a
+    concrete strategy to improve original models developed by Hodgkins et al.
+    (2018) to predict organic matter holocellulose and Klason lignin contents
+    from mid infrared spectra is proposed and the results from Hodgkins et al.
+    (2018) are replicated.
+License: GPL-3
+ByteCompile: true
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.0
+Imports: 
+    bookdown,
+    here,
+    irpeat (>= 0.0.0.9000),
+    ir (>= 0.0.0.9000),
+    projpred (>= 2.0.2),
+    kableExtra (>= 1.1.0),
+    scales (>= 1.1.1),
+    ggrepel (>= 0.8.2),
+    patchwork (>= 1.0.1),
+    bayesplot (>= 1.7.2),
+    loo (>= 2.2.0),
+    brms (>= 2.13.0),
+    rstanarm (>= 2.19.3),
+    Rcpp (>= 1.0.4.6),
+    dplyr (>= 1.0.0),
+    magrittr (>= 1.5),
+    caret (>= 6.0-86),
+    lattice (>= 0.20-41),
+    ggplot2 (>= 3.3.2),
+    purrr (>= 0.3.4),
+    stringr (>= 1.4.0),
+    tidyr (>= 1.1.3)
+Suggests: 
+    devtools (>= 2.3.0),
+    git2r (>= 0.27.1),
+    bib2df (>= 1.1.1),
