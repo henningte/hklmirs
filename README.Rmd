@@ -56,7 +56,7 @@ manuscript1$doi <-
 
 This repository contains the data and code for our submitted manuscript:
 
-> `r paste(manuscript1$authors, "(submitted)", manuscript1$title)`
+> `r paste(manuscript1$authors, "(submitted):", manuscript1$title)`
 
 
 ### How to cite

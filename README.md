@@ -5,7 +5,7 @@
 
 This repository contains the data and code for our submitted manuscript:
 
-> Henning Teickner and Klaus-Holger Knorr (submitted) Improving Models
+> Henning Teickner and Klaus-Holger Knorr (submitted): Improving Models
 > to Predict Holocellulose and Klason Lignin Contents for Peat Soil
 > Organic Matter with Mid Infrared Spectra.
 
