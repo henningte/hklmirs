@@ -16,7 +16,7 @@ WORKDIR /home/rstudio/hkl-mirs
 
 # install renv R package
 ENV RENV_VERSION 0.11.0-6
-RUN R -e "install.packages('emotes', repos = c(CRAN = 'https://cran.r-project.org'))"
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cran.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 # Restore renv cache
