@@ -70,6 +70,7 @@ manuscript2$doi <-
   paste0(".")
 ```
 
+[![DOI](https://zenodo.org/badge/465653387.svg)](https://zenodo.org/badge/latestdoi/465653387)
 
 # hklmirs
 
@@ -83,7 +84,7 @@ This repository contains the data and code for our two manuscripts (in preparati
 
 Please cite this compendium as:
 
-> Henning Teickner and Klaus-Holger Knorr, (`r format(Sys.Date(), "%Y")`). _Compendium of R code and data for "`r manuscript1_yaml$title`" and "`r manuscript2_yaml$title`"_. Accessed `r format(Sys.Date(), "%d %b %Y")`. Online at <https://github.com/henningte/hklmirs/>
+> Henning Teickner and Klaus-Holger Knorr, (`r format(Sys.Date(), "%Y")`). _Compendium of R code and data for "`r manuscript1_yaml$title`" and "`r manuscript2_yaml$title`"_. Accessed `r format(Sys.Date(), "%d %b %Y")`. Online at <https://doi.org/10.5281/zenodo.6325760>
 
 
 ## Contents
@@ -122,7 +123,7 @@ The other folders in this directory follow the standard naming scheme and functi
 
 ## How to run in your broswer or download and run locally
 
-You can download the compendium as a zip from from this URL: <https://github.com/henningte/hklmirs/>
+You can download the compendium as a zip from from these URLs: <https://github.com/henningte/hklmirs/> or <https://doi.org/10.5281/zenodo.6325760>
 
 Or you can install this compendium as an R package, hklmirs, from GitHub with:
 

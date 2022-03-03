@@ -46,7 +46,7 @@ availability:
   #sample: |
   #  use this section when having geoscientific samples available
   codedata: |
-    Data and code to reproduce our analyzes are available via [---todo: add link].
+    Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.6325760>.
 #videosupplement: |
 #  use this section when having video supplements available
 authorcontribution: |

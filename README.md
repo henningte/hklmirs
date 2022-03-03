@@ -1,6 +1,8 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+[![DOI](https://zenodo.org/badge/465653387.svg)](https://zenodo.org/badge/latestdoi/465653387)
+
 # hklmirs
 
 This repository contains the data and code for our two manuscripts (in
@@ -23,7 +25,7 @@ Please cite this compendium as:
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
 > Spectra” and “Predicting Absolute Holocellulose and Klason Lignin
 > Contents for Peat Remains Challenging”*. Accessed 03 Mar 2022. Online
-> at <https://github.com/henningte/hklmirs/>
+> at <https://doi.org/10.5281/zenodo.6325760>
 
 ## Contents
 
@@ -114,8 +116,9 @@ directories and files:
 
 ## How to run in your broswer or download and run locally
 
-You can download the compendium as a zip from from this URL:
-<https://github.com/henningte/hklmirs/>
+You can download the compendium as a zip from from these URLs:
+<https://github.com/henningte/hklmirs/> or
+<https://doi.org/10.5281/zenodo.6325760>
 
 Or you can install this compendium as an R package, hklmirs, from GitHub
 with:

@@ -93,3 +93,6 @@ The authors declare no competing interests.
 
 HT performed the calculations, prepared the figures, and wrote the original text. Both HT and KHK revised and edited the text. KHK provided funding for this study.
 
+# Data and Code availability {.unnumbered}
+
+Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.6325760.>
