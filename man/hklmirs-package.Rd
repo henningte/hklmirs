@@ -16,11 +16,11 @@ Reproducible Research Compendium for "Improving Models to Predict
     (2018) are replicated.
 }
 \author{
-\strong{Maintainer}: Henning Teickner \email{h_teic01@uni-muenster.de} (0000-0002-3993-1182)
+\strong{Maintainer}: Henning Teickner \email{h_teic01@uni-muenster.de} (\href{https://orcid.org/0000-0002-3993-1182}{ORCID})
 
 Authors:
 \itemize{
-  \item Klaus-Holger Knorr \email{kh.knorrr@wwu.de}
+  \item Klaus-Holger Knorr \email{kh.knorrr@wwu.de} (\href{https://orcid.org/0000-0003-4175-0214}{ORCID})
 }
 
 }

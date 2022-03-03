@@ -7,11 +7,13 @@ Authors@R:
            family = "Teickner",
            role = c("aut", "cre"),
            email = "h_teic01@uni-muenster.de",
-           comment = "0000-0002-3993-1182"),
+           comment = c(ORCID = "0000-0002-3993-1182")),
     person(given = "Klaus-Holger",
            family = "Knorr",
            role = c("aut"), 
-           email = "kh.knorrr@wwu.de"))
+           email = "kh.knorrr@wwu.de",
+           comment = c(ORCID = "0000-0003-4175-0214"))
+    )
 Description: 
     Reproducible Research Compendium for "Improving Models to Predict 
     Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with 
@@ -32,7 +34,6 @@ Imports:
     here,
     irpeat (>= 0.0.0.9000),
     ir (>= 0.0.0.9000),
-    projpred (>= 2.0.2),
     kableExtra (>= 1.1.0),
     scales (>= 1.1.1),
     ggrepel (>= 0.8.2),
@@ -49,8 +50,9 @@ Imports:
     ggplot2 (>= 3.3.2),
     purrr (>= 0.3.4),
     stringr (>= 1.4.0),
-    tidyr (>= 1.1.3)
+    tidyr (>= 1.1.4),
+    betareg (>= 3.1.3)
 Suggests: 
     devtools (>= 2.3.0),
     git2r (>= 0.27.1),
-    bib2df (>= 1.1.1),
+    rticles (>= 0.14)

@@ -3,11 +3,12 @@
 
 # hklmirs
 
-This repository contains the data and code for our submitted manuscript:
+This repository contains the data and code for our manuscript (in
+preparation):
 
-> Henning Teickner and Klaus-Holger Knorr (submitted): Improving Models
-> to Predict Holocellulose and Klason Lignin Contents for Peat Soil
-> Organic Matter with Mid Infrared Spectra.
+> Henning Teickner and Klaus-Holger Knorr (in preparation): Improving
+> Models to Predict Holocellulose and Klason Lignin Contents for Peat
+> Soil Organic Matter with Mid Infrared Spectra.
 
 ### How to cite
 
@@ -16,7 +17,7 @@ Please cite this compendium as:
 > Henning Teickner and Klaus-Holger Knorr, (2022). *Compendium of R code
 > and data for “Improving Models to Predict Holocellulose and Klason
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
-> Spectra”*. Accessed 03 Feb 2022. Online at <https://doi.org/xxx/xxx>
+> Spectra”*. Accessed 03 Mar 2022. Online at <https://doi.org/xxx/xxx>
 
 ## Contents
 
@@ -26,35 +27,35 @@ The **analysis** directory contains:
     needed to reproduce the manuscript, including figures and tables.
     The main script is
     [001-paper-main.Rmd](analysis/paper/001-paper-main.Rmd). Additional
-    scripts are: -
-    [002-paper-m-original-models.Rmd](analysis/paper/002-paper-m-original-models.Rmd):
-    Computes the original models used in Hodgkins et al. (2018) and
-    models with the same model structure, but as Bayesian models.  
-    \-
-    [003-paper-m-gaussian-beta.Rmd](analysis/paper/003-paper-m-gaussian-beta.Rmd):
-    Computes models assuming a Beta distribution for holocellulose and
-    Klason lignin contents and compares them to the original models. -
-    [004-paper-m-reduce-underfitting.Rmd](analysis/paper/004-paper-m-reduce-underfitting.Rmd):
-    Extents the Beta regression models by including additional variables
-    (additional peaks) or using a different approach (using measured
-    spectral intensities of binned spectra instead of extracted peaks),
-    and validates these models using LOO-CV. -
-    [005-paper-m-minerals.Rmd](analysis/paper/005-paper-m-minerals.Rmd):
-    Uses the models from `003-paper-m-gaussian-beta.Rmd` to test how
-    accurate a model for holocellulose content is which is also
-    calibrated on training samples with higher mineral contents. -
-    [006-paper-m-prediction-domain.Rmd](analysis/paper/006-paper-m-prediction-domain.Rmd):
-    Analyzes the prediction domain (Wadoux et al. 2021) of the original
-    models and the modified models and identifie under which conditions
-    models extrapolate for peat and vegetation smaples from Hodgkins et
-    al. (2018). -
-    [007-paper-m-prediction-differences.Rmd](analysis/paper/007-paper-m-prediction-differences.Rmd):
-    Compares predictions for the training data and the peat and
-    vegetation data from Hodgkins et al. (2018) for the original models
-    from Hodgkins et al. (2018) and the modified models from
-    `004-paper-m-reduce-underfitting.Rmd`. -
-    [008-paper-supplementary.Rmd](analysis/paper/008-paper-supplementary.Rmd):
-    Computes supplementary analyses and figures.
+    scripts are:
+      - [002-paper-m-original-models.Rmd](analysis/paper/002-paper-m-original-models.Rmd):
+        Computes the original models used in Hodgkins et al. (2018) and
+        models with the same model structure, but as Bayesian models.  
+      - [003-paper-m-gaussian-beta.Rmd](analysis/paper/003-paper-m-gaussian-beta.Rmd):
+        Computes models assuming a Beta distribution for holocellulose
+        and Klason lignin contents and compares them to the original
+        models.
+      - [004-paper-m-reduce-underfitting.Rmd](analysis/paper/004-paper-m-reduce-underfitting.Rmd):
+        Extents the Beta regression models by including additional
+        variables (additional peaks) or using a different approach
+        (using measured spectral intensities of binned spectra instead
+        of extracted peaks), and validates these models using LOO-CV.
+      - [005-paper-m-minerals.Rmd](analysis/paper/005-paper-m-minerals.Rmd):
+        Uses the models from `003-paper-m-gaussian-beta.Rmd` to test how
+        accurate a model for holocellulose content is which is also
+        calibrated on training samples with higher mineral contents.
+      - [006-paper-m-prediction-domain.Rmd](analysis/paper/006-paper-m-prediction-domain.Rmd):
+        Analyzes the prediction domain (Wadoux et al. 2021) of the
+        original models and the modified models and identifie under
+        which conditions models extrapolate for peat and vegetation
+        smaples from Hodgkins et al. (2018).
+      - [007-paper-m-prediction-differences.Rmd](analysis/paper/007-paper-m-prediction-differences.Rmd):
+        Compares predictions for the training data and the peat and
+        vegetation data from Hodgkins et al. (2018) for the original
+        models from Hodgkins et al. (2018) and the modified models from
+        `004-paper-m-reduce-underfitting.Rmd`.
+      - [008-paper-supplementary.Rmd](analysis/paper/008-paper-supplementary.Rmd):
+        Computes supplementary analyses and figures.
   - [:file\_folder: data](/analysis/data): Data used in the analysis.
     Note that raw data is not stored in [:file\_folder:
     raw\_data](/analysis/data/raw_data) (empty folder), but in
@@ -62,46 +63,34 @@ The **analysis** directory contains:
     derived\_data](/analysis/data/derived_data) contains derived data
     computed from the scripts. The raw data are derived from Hodgkins et
     al. (2018).
-  - [:file\_folder: figures](/analysis/figures): Plots and other
-    illustrations (empty folder).
 
 The other folders in this directory follow the standard naming scheme
 and function of folders in R packages. There are the following
 directories and files:
 
   - `README.md`/`README.Rmd`: Readme for the compendium.  
-
   - `DESCRIPTION`: The R package DESCRIPTION file for the compendium.  
-
   - `NAMESPACE`: The R package NAMESPACE file for the compendium.  
-
   - `LICENSE.md`: Details on the license for the code in the
     compendium.  
-
   - `CONTRIBUTING.md` and `CONDUCT.md`: Files with information on how to
     contribute to the compendium.  
-
   - `Dockerfile`: Dockerfile to build a Docker image for the
     compendium.  
-
   - `.Rbuildignore`, `.gitignore`, `.dockerignore`: Files to ignore
     during R package building, to ignore by Git, and to ignore while
     building a Docker image, respectively.  
-
   - `renv.lock`: renv lock file (Lists all R package dependencies and
     versions and can be used to restore the R package library using
     renv). `renv.lock` was created by running `renv::snapshot()` in the
     R package directory and it uses the information included in the
     `DESCRIPTION` file.  
-
   - `.Rprofile`: Code to run upon opening the R-project.  
-
   - `R`, `man`, `inst`, `data-raw`, `data`, `src`: Default folders for
     making the R package run.
-    
-      - Folder `inst/extdata`: Folder with the raw data used for the
-        analyses. All files in this folder are derived from Hodgkins et
-        al. (2018).
+  - Folder `inst/extdata`: Folder with the raw data used for the
+    analyses. All files in this folder are derived from Hodgkins et al.
+    (2018).
 
 ## How to run in your broswer or download and run locally
 
@@ -123,7 +112,7 @@ To reproduce the analyses for the paper, open the Rstudio project
 included in this research compendium and run the Rmarkdown script in
 `analysis/paper/001-paper-main.rmd`.
 
-Running the whole script takes about two hours and occupies additional
+Running the whole script takes about 12 hours and occupies additional
 disk space of \~2 Gb.
 
 Alternatively, the [Dockerfile](Dockerfile) can be used to build a
@@ -134,7 +123,7 @@ packages; this is managed using the R package
 
 The [Dockerfile](Dockerfile) provides instructions how to build a Docker
 image from the Dockerfile and how to run the image in a Docker
-container. It occupies disk space of \~5 Gb.
+container. It occupies disk space of \~6 Gb.
 
 When the Docker image runs in a container, go to `localhost:8787` in
 your Browser. You will find an RStudio interface where you can log in
