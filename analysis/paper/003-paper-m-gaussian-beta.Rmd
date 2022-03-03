@@ -32,8 +32,6 @@ m2.3 <- brms::brm(kl ~ arom15arom16,
 # compute loos
 m1.3_loo <- loo(m1.3, k_threshold = k_threshold)
 m2.3_loo <- loo(m2.3, k_threshold = k_threshold)
-
-# ---todo: brms and rstanarm yield very different uncertainty estimates. brms has smaller prediction intervals. The reason seems to be the different priors for phi (normal(0, 2.5) for rstanarm; gamma(0.01, 0.01) for brms).
 ```
 
 ```{r m-gaussian-beta-2}

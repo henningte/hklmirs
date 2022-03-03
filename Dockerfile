@@ -33,18 +33,18 @@ RUN sudo -u rstudio Rscript -e 'remotes::install_github("henningte/hklmirs")'
 LABEL maintainer = "Henning Teickner <henning.teickner@uni-muenster.de>" \
   org.opencontainers.image.authors = "Henning Teickner <henning.teickner@uni-muenster.de>" \
   author.orcid = "0000-0002-3993-1182" \
-  org.opencontainers.image.version = "0.0.0.9000" \
+  org.opencontainers.image.version = "0.1.0" \
   org.opencontainers.image.licenses = "GPL-3"
 
 # instructions
 
 # to build the image, navigate to the directory with the Dockerfile and run (the images has a size of ~7 Gb):
-# docker build -t hklmirs:0.0.0.9000 .
+# docker build -t hklmirs:0.1.0 .
 
 # to run the image in a container, do:
-# docker run --rm -e PASSWORD=hkl -p 8787:8787 -v $(pwd):/home/rstudio --user rstudio hklmirs:0.0.0.9000
+# docker run --rm -e PASSWORD=hkl -p 8787:8787 -v $(pwd):/home/rstudio --user rstudio hklmirs:0.1.0
 
 # to reproduce the analyses, run (takes about 12 h and occupies additional 2 Gb disk space)
-# docker run --rm -v $(pwd):/home/rstudio hklmirs:0.0.0.9000 R -e 'setwd("/home/rstudio/hkl-mirs"); rmarkdown::render("analysis/paper/001-paper-main.Rmd");'
+# docker run --rm -v $(pwd):/home/rstudio hklmirs:0.1.0 R -e 'setwd("/home/rstudio/hkl-mirs"); rmarkdown::render("analysis/paper/001-paper-main.Rmd");'
 
 
