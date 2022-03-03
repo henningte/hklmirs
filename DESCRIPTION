@@ -1,6 +1,6 @@
 Package: hklmirs
 Title: Reproducible Research Compendium for "Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid Infrared Spectra" and "Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging". 
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     c(
     person(given = "Henning",
