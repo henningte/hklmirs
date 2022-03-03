@@ -347,44 +347,44 @@ m2.11 <- brms::brm(kl ~ .,
 
 ```{r m-reduce-underfitting-5-1}
 # compute loos
-m1.7_loo <- loo(m1.7, reloo = TRUE, cores = chains)
+m1.7_loo <- loo(m1.7, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-5-2}
-m1.8_loo <- loo(m1.8, reloo = TRUE, cores = chains)
+m1.8_loo <- loo(m1.8, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-5-3}
-m1.9_loo <- loo(m1.9, reloo = TRUE, cores = chains)
+m1.9_loo <- loo(m1.9, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-5-4}
-m1.10_loo <- loo(m1.10, reloo = TRUE, cores = chains)
+m1.10_loo <- loo(m1.10, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-5-5}
-m1.11_loo <- loo(m1.11, reloo = TRUE, cores = chains)
+m1.11_loo <- loo(m1.11, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-6-1}
 # compute loos
-m2.7_loo <- loo(m2.7, reloo = TRUE, cores = chains)
+m2.7_loo <- loo(m2.7, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-6-2}
-m2.8_loo <- loo(m2.8, reloo = TRUE, cores = chains)
+m2.8_loo <- loo(m2.8, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-6-3}
-m2.9_loo <- loo(m2.9, reloo = TRUE, cores = chains)
+m2.9_loo <- loo(m2.9, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-6-4}
-m2.10_loo <- loo(m2.10, reloo = TRUE, cores = chains)
+m2.10_loo <- loo(m2.10, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-6-5}
-m2.11_loo <- loo(m2.11, reloo = TRUE, cores = chains)
+m2.11_loo <- loo(m2.11, reloo = TRUE, cores = chains, recompile = FALSE)
 ```
 
 ```{r m-reduce-underfitting-7}
@@ -402,6 +402,16 @@ loo_comparison <-
   )
 
 ## create table for printing
+loo_comparison_code <-
+  tibble::tibble(
+    model_code = paste0("m1.", c(2, 3, 5:11)),
+    bin_width = c(rep("-", 4), 10, 20, 30, 50, 100),
+    family = c("Gaussian", rep("Beta", 8)),
+    original_model = c(rep(TRUE, 2), rep(FALSE, 7)),
+    prior_scale = c(rep(2.5, 3), 0.5, rep("-", 5)),
+    variables = ifelse(bin_width == "-", "peaks", "bins")
+  )
+
 
 # holocellulose
 loo_comparison_hol <-
@@ -410,16 +420,9 @@ loo_comparison_hol <-
   dplyr::pull(loo_comparison) %>%
   as.data.frame() %>%
   dplyr::select(1:3) %>%
-  dplyr::mutate(dplyr::across(dplyr::everything(), round, 1)) %>%
-  dplyr::mutate(
-    y_variable = "Holocellulose",
-    model_code = rownames(.),
-    bin_width = c(50, 100, 30, 10, rep("-", 4), 20),
-    family = c(rep("Beta", 7), "Gaussian", "Beta"),
-    original_model = c(rep(FALSE, 6), TRUE, TRUE, FALSE),
-    prior_scale = c(rep("-", 4), 0.5, 2.5, 2.5, 2.5, "-"),
-    variables = ifelse(bin_width == "-", "peaks", "bins")
-  )
+  dplyr::mutate(model_code = rownames(.)) %>%
+  dplyr::mutate(dplyr::across(1:3, round, 1)) %>%
+  dplyr::left_join(loo_comparison_code, by = "model_code")
 
 # Klason lignin
 loo_comparison_kl <-
@@ -428,16 +431,13 @@ loo_comparison_kl <-
   dplyr::pull(loo_comparison) %>%
   as.data.frame() %>%
   dplyr::select(1:3) %>%
-  dplyr::mutate(dplyr::across(dplyr::everything(), round, 1)) %>%
-  dplyr::mutate(
-    y_variable = "Klason lignin",
-    model_code = rownames(.),
-    bin_width = c(10, rep("-", 4), 30, 20, 100, 50),
-    family = c(rep("Beta", 3), "Gaussian", rep("Beta", 5)),
-    original_model = c(rep(FALSE, 3), TRUE, TRUE, rep(FALSE, 4)),
-    prior_scale = c("-", 0.5, 2.5, 2.5, 2.5, rep("-", 4)),
-    variables = ifelse(bin_width == "-", "peaks", "bins")
-  )
+  dplyr::mutate(model_code = rownames(.)) %>%
+  dplyr::mutate(dplyr::across(1:3, round, 1)) %>%
+  dplyr::left_join(
+    loo_comparison_code %>%
+      dplyr::mutate(model_code =
+                      model_code %>% stringr::str_replace(pattern = "^m1", replacement = "m2")), 
+    by = "model_code")
 
 ## combine
 loo_comparison_res_colindex <- 
@@ -465,33 +465,33 @@ loo_comparison_res <-
 
 ## create data sets for predictions
 
-# bin width: 50
-d_peat_bin50_scale <-
-  d_underfitting_flat[[4]] %>%
+# bin width: 20
+d_peat_bin20_scale <-
+  d_underfitting_flat[[2]] %>%
   dplyr::select(-1) %>%
   t() %>%
   as.data.frame() %>%
   scale(center = TRUE, scale = TRUE)
 
-d_peat_bin50_scale <-
+d_peat_bin20_scale <-
   tibble::tibble(
-    center = attr(d_peat_bin50_scale, "scaled:center"),
-    scale = attr(d_peat_bin50_scale, "scaled:scale")
+    center = attr(d_peat_bin20_scale, "scaled:center"),
+    scale = attr(d_peat_bin20_scale, "scaled:scale")
   )
 
-d_peat_bin50_flat <-
+d_peat_bin20_flat <-
   d_peat %>%
-  ir::ir_bin(width = 50) %>%
+  ir::ir_bin(width = 20) %>%
   ir::ir_flatten()
 
-d_peat_bin50 <- 
-  d_peat_bin50_flat %>%
+d_peat_bin20 <- 
+  d_peat_bin20_flat %>%
   dplyr::select(-1) %>%
   t() %>%
   as.data.frame() %>%
   scale(
-    center = d_peat_bin50_scale$center, 
-    scale = d_peat_bin50_scale$scale
+    center = d_peat_bin20_scale$center, 
+    scale = d_peat_bin20_scale$scale
   ) %>%
   as.data.frame()
 
@@ -528,8 +528,8 @@ d_peat_bin10 <-
 # predictions
 d_peat_pred_best <- 
   dplyr::bind_rows(
-    m1.10 %>%
-      rstanarm::posterior_predict(newdata = d_peat_bin50) %>%
+    m1.8 %>%
+      rstanarm::posterior_predict(newdata = d_peat_bin20) %>%
       as.data.frame() %>%
       purrr::map_df(function(x) {
         tibble::tibble(
@@ -584,8 +584,8 @@ d_peat_pred_best <-
         model = "Original",
         variable_y = "Klason lignin"
       ),
-    m2.7 %>%
-      rstanarm::posterior_predict(newdata = d_peat_bin10) %>%
+    m2.8 %>%
+      rstanarm::posterior_predict(newdata = d_peat_bin20) %>%
       as.data.frame() %>%
       purrr::map_df(function(x) {
         tibble::tibble(
@@ -648,7 +648,7 @@ d_fitted_comparison <-
         dplyr::pull(hol) %>%
         rep(4),
       yhat = 
-        list(m1.2, m1.5, m1.10) %>%
+        list(m1.2, m1.5, m1.8) %>%
         purrr::map(function(x) {
           apply(posterior_predict(x), 2, median)
         }) %>%
@@ -665,7 +665,7 @@ d_fitted_comparison <-
         dplyr::pull(kl) %>%
         rep(4),
       yhat = 
-        list(m2.2, m2.6, m2.7) %>%
+        list(m2.2, m2.6, m2.8) %>%
         purrr::map(function(x) {
           apply(posterior_predict(x), 2, median)
         }) %>%
@@ -860,18 +860,18 @@ p_y_yhat_best <-
 ### compute predictions for vegetation samples comparing the "best" model and th original Gaussian regression model
 
 # bin width: 50
-d_veg_bin50_flat <-
+d_veg_bin20_flat <-
   d_veg %>%
-  ir::ir_bin(width = 50) %>%
+  ir::ir_bin(width = 20) %>%
   ir::ir_flatten()
 
-d_veg_bin50 <- 
-  d_veg_bin50_flat %>%
+d_veg_bin20 <- 
+  d_veg_bin20_flat %>%
   dplyr::select(-1) %>%
   t() %>%
   as.data.frame() %>%
-  scale(center = d_peat_bin50_scale$center, 
-        scale = d_peat_bin50_scale$scale) %>%
+  scale(center = d_peat_bin20_scale$center, 
+        scale = d_peat_bin20_scale$scale) %>%
   as.data.frame()
 
 # bin width: 10
@@ -892,8 +892,8 @@ d_veg_bin10 <-
 # predictions
 d_veg_pred_best <- 
   dplyr::bind_rows(
-    m1.10 %>%
-      rstanarm::posterior_predict(newdata = d_veg_bin50) %>%
+    m1.8 %>%
+      rstanarm::posterior_predict(newdata = d_veg_bin20) %>%
       as.data.frame() %>%
       purrr::map_df(function(x) {
         tibble::tibble(
@@ -948,8 +948,8 @@ d_veg_pred_best <-
         model = "Original",
         variable_y = "Klason lignin"
       ),
-    m2.7 %>%
-      rstanarm::posterior_predict(newdata = d_veg_bin10) %>%
+    m2.8 %>%
+      rstanarm::posterior_predict(newdata = d_veg_bin20) %>%
       as.data.frame() %>%
       purrr::map_df(function(x) {
         tibble::tibble(

@@ -42,47 +42,47 @@ d_prediction_domain_hol_or <-
 d_prediction_domain_hol_bin <-
   dplyr::bind_rows(
     # training data
-    d_underfitting[[4]] %>% 
+    d_underfitting[[2]] %>% 
       dplyr::select(-kl, -hol) %>%
       tidyr::pivot_longer(cols = dplyr::everything(),
                           names_to = "variable_x", values_to = "value_x") %>%
       dplyr::mutate(
         wn = 
-          d_underfitting_flat[[4]]$x %>%
-          rep(nrow(d_underfitting[[4]])),
+          d_underfitting_flat[[2]]$x %>%
+          rep(nrow(d_underfitting[[2]])),
         sample_id = 
-          seq_len(nrow(d_underfitting[[4]])) %>% 
-          rep(each = nrow(d_underfitting_flat[[4]])) %>% 
+          seq_len(nrow(d_underfitting[[2]])) %>% 
+          rep(each = nrow(d_underfitting_flat[[2]])) %>% 
           as.character(),
         data_type = "Training"
       ),
     # peat data
-     d_peat_bin50 %>% 
+     d_peat_bin20 %>% 
       tidyr::pivot_longer(cols = dplyr::everything(),
                           names_to = "variable_x", values_to = "value_x") %>%
       dplyr::mutate(
         wn = 
-          d_peat_bin50_flat$x %>%
-          rep(nrow(d_peat_bin50)),
+          d_peat_bin20_flat$x %>%
+          rep(nrow(d_peat_bin20)),
         sample_id = 
-          seq_len(nrow(d_peat_bin50)) %>% 
-          rep(each = nrow(d_peat_bin50_flat)) %>% 
-          magrittr::add(nrow(d_underfitting[[4]])) %>%
+          seq_len(nrow(d_peat_bin20)) %>% 
+          rep(each = nrow(d_peat_bin20_flat)) %>% 
+          magrittr::add(nrow(d_underfitting[[2]])) %>%
           as.character(),
         data_type = "Peat"
       ),
     # vegetation data
-     d_veg_bin50 %>% 
+     d_veg_bin20 %>% 
       tidyr::pivot_longer(cols = dplyr::everything(),
                           names_to = "variable_x", values_to = "value_x") %>%
       dplyr::mutate(
         wn = 
-          d_veg_bin50_flat$x %>%
-          rep(nrow(d_veg_bin50)),
+          d_veg_bin20_flat$x %>%
+          rep(nrow(d_veg_bin20)),
         sample_id = 
-          seq_len(nrow(d_veg_bin50)) %>% 
-          rep(each = nrow(d_veg_bin50_flat)) %>% 
-          magrittr::add(nrow(d_underfitting[[4]]) + nrow(d_peat_bin50)) %>%
+          seq_len(nrow(d_veg_bin20)) %>% 
+          rep(each = nrow(d_veg_bin20_flat)) %>% 
+          magrittr::add(nrow(d_underfitting[[2]]) + nrow(d_peat_bin20)) %>%
           as.character(),
         data_type = "Vegetation"
       )
@@ -135,47 +135,47 @@ d_prediction_domain_kl_or <-
 d_prediction_domain_kl_bin <-
   dplyr::bind_rows(
     # training data
-    d_underfitting[[1]] %>% 
+    d_underfitting[[2]] %>% 
       dplyr::select(-kl, -hol) %>%
       tidyr::pivot_longer(cols = dplyr::everything(),
                           names_to = "variable_x", values_to = "value_x") %>%
       dplyr::mutate(
         wn = 
-          d_underfitting_flat[[1]]$x %>%
-          rep(nrow(d_underfitting[[1]])),
+          d_underfitting_flat[[2]]$x %>%
+          rep(nrow(d_underfitting[[2]])),
         sample_id = 
-          seq_len(nrow(d_underfitting[[1]])) %>% 
-          rep(each = nrow(d_underfitting_flat[[1]])) %>% 
+          seq_len(nrow(d_underfitting[[2]])) %>% 
+          rep(each = nrow(d_underfitting_flat[[2]])) %>% 
           as.character(),
         data_type = "Training"
       ),
     # peat data
-     d_peat_bin10 %>% 
+     d_peat_bin20 %>% 
       tidyr::pivot_longer(cols = dplyr::everything(),
                           names_to = "variable_x", values_to = "value_x") %>%
       dplyr::mutate(
         wn = 
-          d_peat_bin10_flat$x %>%
-          rep(nrow(d_peat_bin10)),
+          d_peat_bin20_flat$x %>%
+          rep(nrow(d_peat_bin20)),
         sample_id = 
-          seq_len(nrow(d_peat_bin10)) %>% 
-          rep(each = nrow(d_peat_bin10_flat)) %>% 
-          magrittr::add(nrow(d_underfitting[[1]])) %>%
+          seq_len(nrow(d_peat_bin20)) %>% 
+          rep(each = nrow(d_peat_bin20_flat)) %>% 
+          magrittr::add(nrow(d_underfitting[[2]])) %>%
           as.character(),
         data_type = "Peat"
       ),
     # vegetation data
-     d_veg_bin10 %>% 
+     d_veg_bin20 %>% 
       tidyr::pivot_longer(cols = dplyr::everything(),
                           names_to = "variable_x", values_to = "value_x") %>%
       dplyr::mutate(
         wn = 
-          d_veg_bin10_flat$x %>%
-          rep(nrow(d_veg_bin10)),
+          d_veg_bin20_flat$x %>%
+          rep(nrow(d_veg_bin20)),
         sample_id = 
-          seq_len(nrow(d_veg_bin10)) %>% 
-          rep(each = nrow(d_veg_bin10_flat)) %>% 
-          magrittr::add(nrow(d_underfitting[[1]]) + nrow(d_peat_bin10)) %>%
+          seq_len(nrow(d_veg_bin20)) %>% 
+          rep(each = nrow(d_veg_bin20_flat)) %>% 
+          magrittr::add(nrow(d_underfitting[[2]]) + nrow(d_peat_bin20)) %>%
           as.character(),
         data_type = "Vegetation"
       )
@@ -246,9 +246,14 @@ p3 <-
                dplyr::filter(stringr::str_detect(variable_y, "Holocellulose") & abs(median) >= 0.02) %>%
                dplyr::pull(wn),
              colour = "grey", linetype = 2) + 
+  geom_vline(xintercept =  
+               m_pars %>%
+               dplyr::filter(stringr::str_detect(variable_y, "Klason lignin") & abs(median) >= 0.02) %>%
+               dplyr::pull(wn),
+             colour = "grey", linetype = 2) + 
   labs(x = expression("Bin wavenumber ["*cm^{-1}*"]"),
        y = "Predictor value",
-       title = "Bin width = 50") +
+       title = "Bin width = 20") +
   guides(fill = guide_legend(title = "Dataset")) +
   scale_fill_manual(
     breaks = data_type_levels, 
@@ -267,7 +272,7 @@ p4 <-
                m_pars %>%
                dplyr::filter(stringr::str_detect(variable_y, "Klason lignin") & abs(median) >= 0.02) %>%
                dplyr::pull(wn),
-             colour = "grey", linetype = 2) + # ---todo: remove hard coding of values
+             colour = "grey", linetype = 2) + 
   labs(x = expression("Bin wavenumber ["*cm^{-1}*"]"),
        y = "Predictor value",
        title = "Bin width = 10") +
@@ -278,19 +283,28 @@ p4 <-
   )
 
 # combine plots
-pp1 <-
-  (p1 | p2) +
-  plot_annotation(title = "Original models")
-
-pp2 <-
-  p3 / p4 +
-  plot_annotation(title = "Models using binned spectra")
-
-p_prediction_domain <- 
-  pp1 / pp2 +
+p_prediction_domain <-
+  (p1 | p2 | p3) + 
   plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
-  plot_layout(heights = c(0.4, 2), guides = "collect") &
+  plot_layout(widths = c(1, 1, 3), guides = "collect") &
   theme(legend.position = "bottom",
         legend.box = "vertical")
+
+## old version wit two different plots for holocellulose and Klason lignin
+## combine plots
+#pp1 <-
+#  (p1 | p2) +
+#  plot_annotation(title = "Original models")
+#
+#pp2 <-
+#  p3 / p4 +
+#  plot_annotation(title = "Models using binned spectra")
+#
+#p_prediction_domain <- 
+#  pp1 / pp2 +
+#  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+#  plot_layout(heights = c(0.4, 2), guides = "collect") &
+#  theme(legend.position = "bottom",
+#        legend.box = "vertical")
 ```
 

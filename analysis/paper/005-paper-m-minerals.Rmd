@@ -13,7 +13,7 @@ m1.12 <-
 
 brms_beta_priors2 <-
   c(
-    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[4]], ", df_global = 1, autoscale = TRUE)"),
+    brms::prior_string(paste0("horseshoe(df = 1, scale_global = ", prior_hs_tau0[[2]], ", df_global = 1, autoscale = TRUE)"),
                        class = "b"),
     brms::prior_string("normal(0, 2.5)", class = "Intercept"),
     brms::prior_string("gamma(0.01, 0.01)", class = "phi")
@@ -23,7 +23,7 @@ m1.13 <-
   brms::brm(
     hol ~ ., 
     data = 
-      d_underfitting[[4]] %>% 
+      d_underfitting[[2]] %>% 
       dplyr::select(-kl),
     family = Beta(link = "logit", link_phi = "log"),
     prior = brms_beta_priors2,
@@ -32,7 +32,7 @@ m1.13 <-
     warmup = warmup,
     iter = iter,
     seed = seed,
-    control = list(adapt_delta = 0.99, max_treedepth = 15) # with default adapt_delta (0.8): 22 divergent transitions; adapt_delta = 0.99: There were 2000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10
+    control = list(adapt_delta = 0.99, max_treedepth = 15)
   ) 
 ```
 
@@ -51,7 +51,7 @@ d_minerals_pred <-
     fit = c(
       posterior_predict(m1.2, newdata = d) %>%
         apply(2, median),
-      posterior_predict(m1.10, newdata = d_underfitting[[4]]) %>%
+      posterior_predict(m1.8, newdata = d_underfitting[[2]]) %>%
         apply(2, median),
       posterior_predict(m1.6, newdata = d) %>%
         apply(2, median),
@@ -91,13 +91,13 @@ p_y_yhat_minerals <-
 ## plot to compare coefficients of the best models
 
 # Holocellulose
-m1.10_pars <- 
-  m1.10 %>%
+m1.8_pars <- 
+  m1.8 %>%
   as.data.frame() %>%
   dplyr::select(dplyr::contains("b_V"))
 
-m1.10_pars <- 
-  m1.10_pars %>%
+m1.8_pars <- 
+  m1.8_pars %>%
   purrr::map_df(function(x) {
     res <- quantile(x, c(0.5, 0.05, 0.95))
     tibble::tibble(
@@ -107,8 +107,8 @@ m1.10_pars <-
     )
   }) %>%
   dplyr::mutate(
-    par_name = colnames(m1.10_pars),
-    wn = d_underfitting_flat[[4]]$x,
+    par_name = colnames(m1.8_pars),
+    wn = d_underfitting_flat[[2]]$x,
     variable_y = "Holocellulose (no minerals)"
   )
 
@@ -129,18 +129,18 @@ m1.13_pars <-
   }) %>%
   dplyr::mutate(
     par_name = colnames(m1.13_pars),
-    wn = d_underfitting_flat[[4]]$x,
+    wn = d_underfitting_flat[[2]]$x,
     variable_y = "Holocellulose (with minerals)"
   )
 
 # Klason lignin
-m2.7_pars <- 
-  m2.7 %>%
+m2.8_pars <- 
+  m2.8 %>%
   as.data.frame() %>%
   dplyr::select(dplyr::contains("b_V"))
 
-m2.7_pars <- 
-  m2.7_pars %>%
+m2.8_pars <- 
+  m2.8_pars %>%
   purrr::map_df(function(x) {
     res <- quantile(x, c(0.5, 0.05, 0.95))
     tibble::tibble(
@@ -150,17 +150,17 @@ m2.7_pars <-
     )
   }) %>%
   dplyr::mutate(
-    par_name = colnames(m2.7_pars),
-    wn = d_underfitting_flat[[1]]$x,
+    par_name = colnames(m2.8_pars),
+    wn = d_underfitting_flat[[2]]$x,
     variable_y = "Klason lignin"
   )
 
 # combine
 m_pars <-
   dplyr::bind_rows(
-    m1.10_pars,
+    m1.8_pars,
     m1.13_pars,
-    m2.7_pars
+    m2.8_pars
   )
 
 # plots

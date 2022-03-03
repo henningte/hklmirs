@@ -18,7 +18,7 @@ knitr::opts_chunk$set(fig.align = "center",
                       fig.pos = "H",
                       echo = FALSE,
                       cache = TRUE,
-                      dev = "pdf")
+                      dev = "png")
 ```
 
 
@@ -297,7 +297,7 @@ p_pred_diff_hol_spectra_diff2
 
 Figure \@ref(fig:res-p-pred-diff-hol-intensity2) shows prediction differences between the original model and the improved model using binned spectra for holocellulose in dependency of absorbance values at different wavenumbers and for different classes of `carb` peak heights.
 
-```{r res-p-pred-diff-hol-intensity2, warning=FALSE, echo=FALSE, out.width="50%", fig.height=14, fig.width=7, fig.cap='Prediction differences between the original model and improved model using binned spectra for the training (first row), peat (second row), and vegetation (bottom row) samples of \\cite{Hodgkins.2018} for different ranges of \\texttt{carb} peak heights (columns) versus intensities at different wavenumber values on the x axis (a: 3400, b: 1200, c: 1550 cm$^{-1}$). Larger prediction differences mean that the original model made larger predictions than the improved model using binned spectra.'}
+```{r res-p-pred-diff-hol-intensity2, warning=FALSE, echo=FALSE, out.width="50%", fig.height=14, fig.width=7, fig.cap='Prediction differences between the original model and improved model using binned spectra for the training (first row), peat (second row), and vegetation (bottom row) samples of \\cite{Hodgkins.2018} for different ranges of \\texttt{carb} peak heights (columns) versus intensities at different wavenumber values on the x axis (a: 3400, b: 1250, c: 1590 cm$^{-1}$). Larger prediction differences mean that the original model made larger predictions than the improved model using binned spectra.'}
 p_pred_diff_hol_intensity2
 ```
 

@@ -57,13 +57,13 @@ d_pred_diff <-
     d %>%
       dplyr::mutate(
         hol_hat =
-          m1.10 %>%
-          posterior_predict(newdata = d_underfitting[[4]]) %>%
+          m1.8 %>%
+          posterior_predict(newdata = d_underfitting[[2]]) %>%
           as.data.frame() %>%
           purrr::map_dbl(median),
          kl_hat = 
-          m2.7 %>%
-          posterior_predict(newdata = d_underfitting[[1]]) %>%
+          m2.8 %>%
+          posterior_predict(newdata = d_underfitting[[2]]) %>%
           as.data.frame() %>%
           purrr::map_dbl(median),
         model = "Best binned spectra"
@@ -126,13 +126,13 @@ d_pred_diff <-
     d_peat %>%
       dplyr::mutate(
         hol_hat =
-          m1.10 %>%
-          posterior_predict(newdata = d_peat_bin50) %>%
+          m1.8 %>%
+          posterior_predict(newdata = d_peat_bin20) %>%
           as.data.frame() %>%
           purrr::map_dbl(median),
          kl_hat = 
-          m2.7 %>%
-          posterior_predict(newdata = d_peat_bin10) %>%
+          m2.8 %>%
+          posterior_predict(newdata = d_peat_bin20) %>%
           as.data.frame() %>%
           purrr::map_dbl(median),
         model = "Best binned spectra"
@@ -197,13 +197,13 @@ d_pred_diff <-
     d_veg %>%
       dplyr::mutate(
         hol_hat =
-          m1.10 %>%
-          posterior_predict(newdata = d_veg_bin50) %>%
+          m1.8 %>%
+          posterior_predict(newdata = d_veg_bin20) %>%
           as.data.frame() %>%
           purrr::map_dbl(median),
          kl_hat = 
-          m2.7 %>%
-          posterior_predict(newdata = d_veg_bin10) %>%
+          m2.8 %>%
+          posterior_predict(newdata = d_veg_bin20) %>%
           as.data.frame() %>%
           purrr::map_dbl(median),
         model = "Best binned spectra"
@@ -266,7 +266,7 @@ d_pred_diff_spectra <-
 
 d_pred_diff_intensities <-
   d_pred_diff_spectra %>%
-  ir::ir_get_intensity(wavenumber = c(3400, 1200, 1550)) %>%
+  ir::ir_get_intensity(wavenumber = c(3400, 1250, 1590)) %>%
   ir::ir_drop_spectra() %>%
   tidyr::unnest(cols = "intensity") %>%
   tidyr::pivot_wider(names_from = x, values_from = y, names_prefix = "intensity_")
@@ -284,7 +284,7 @@ p_pred_diff_train1_p1 <-
   d_pred_diff %>%
   dplyr::mutate(carb_rel = 
                   d_pred_diff_intensities %>%
-                  dplyr::pull(intensity_1550) %>%
+                  dplyr::pull(intensity_1590) %>%
                   scale()
   ) %>%
   dplyr::filter(p_index) %>%
@@ -296,14 +296,14 @@ p_pred_diff_train1_p1 <-
   #             dplyr::mutate(carb_rel = 
   #                
   #                  d_pred_diff_intensities %>%
-  #                    dplyr::pull(intensity_1550)) %>%
+  #                    dplyr::pull(intensity_1590)) %>%
   #             dplyr::filter(p_index & sample_id %in% d$sample_id[d$sample_type != "old magazines"][hol_sel]), 
   #           aes(x = hol_hat * 100, y = hol * 100,
   #               size = carb_rel), 
   #           fill = NA, shape = 21, colour = "grey50") +
   geom_abline(intercept = 0, slope = 1, colour = "grey50") +
   facet_wrap( ~ model) +
-  guides(size = guide_legend(title = expression(Absorbance~at~1550~cm^{-1})),
+  guides(size = guide_legend(title = expression(Absorbance~at~1590~cm^{-1})),
          colour = guide_colourbar(title = "carb")) +
   labs(x = "Fitted values", y = "Measured values",
        title = "Holocellulose") +
@@ -351,13 +351,13 @@ hol_sel <- c(30, 39, 15)
 
 d[d$sample_type != "old magazines", ][hol_sel, ]  %>%
   irpeat:::irp_content_klh_hodgkins_prepare() %>%
-  hodgkins_ggplot() %>%
+  hkl_hodgkins_ggplot() %>%
   wrap_plots()
 
 d_pred_diff %>%
   dplyr::mutate(carb_rel = 
                   d_pred_diff_intensities %>%
-                  dplyr::pull(intensity_1550)) %>%
+                  dplyr::pull(intensity_1590)) %>%
   dplyr::filter(model == "Best binned spectra") %>%
   ggplot(aes(x = carb, y = (hol_hat - hol_hat_or) * 100)) +
   geom_point() +
@@ -370,7 +370,7 @@ p1 <-
   d_pred_diff %>%
   dplyr::mutate(carb_rel = 
                   d_pred_diff_intensities %>%
-                  dplyr::pull(intensity_1550)) %>%
+                  dplyr::pull(intensity_1590)) %>%
   dplyr::filter(p1_index) %>%
   ggplot(aes(x = hol_hat * 100, y = hol_hat_or * 100)) +
   geom_point(aes(colour = carb,
@@ -441,12 +441,12 @@ p_pred_diff_train2 <-
 
 ### Test start:
 
-# in the plots above, one can see that the model makes different predictions for two OM classes: needles and leaves and grasses. How do these spectra differ? It seem that this is mainly th region around 1550
+# in the plots above, one can see that the model makes different predictions for two OM classes: needles and leaves and grasses. How do these spectra differ? It seem that this is mainly th region around 1590
 d %>% 
   dplyr::filter(sample_type %in% c("needles", "leaves and grasses")) %>%
   plot() + 
   geom_path(aes(x = x, y = y, colour = sample_type, group = measurement_id)) +
-  geom_vline(xintercept = 1550)
+  geom_vline(xintercept = 1590)
 ```
 
 ```{r m-prediction-differences-4}
@@ -462,7 +462,7 @@ p1 <-
   d_pred_diff %>%
   dplyr::mutate(carb_rel = 
                   d_pred_diff_intensities %>%
-                  dplyr::pull(intensity_1550) %>%
+                  dplyr::pull(intensity_1590) %>%
                   scale()
   ) %>%
   dplyr::filter(p_index) %>%
@@ -471,7 +471,7 @@ p1 <-
                  size = carb_rel)) +
   geom_abline(intercept = 0, slope = 1, colour = "grey50") +
   facet_wrap( ~ model) +
-  guides(size = guide_legend(title = expression(Absorbance~at~1550~cm^{-1})),
+  guides(size = guide_legend(title = expression(Absorbance~at~1590~cm^{-1})),
          colour = guide_colourbar(title = "carb")) +
   labs(x = "Fitted values", y = "Fitted values (original model)",
        title = "Holocellulose") +
@@ -746,13 +746,13 @@ p_pred_diff_hol_intensity2 <-
   ) %>%
   dplyr::filter(p_index) %>%
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels %>% rev())) %>%
-  ggplot(aes(x = intensity_1200 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1250 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1200 cm"^{-1}), 
-       title = expression("Intensity at 1200 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1250 cm"^{-1}), 
+       title = expression("Intensity at 1250 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
   theme(legend.position = "bottom") +
   scale_color_manual(
@@ -768,13 +768,13 @@ p_pred_diff_hol_intensity3 <-
   ) %>%
   dplyr::filter(p_index) %>%
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels %>% rev())) %>%
-  ggplot(aes(x = intensity_1550 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1950 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1550 cm"^{-1}), 
-       title = expression("Intensity at 1550 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1590 cm"^{-1}), 
+       title = expression("Intensity at 1590 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
   theme(legend.position = "bottom") +
   scale_color_manual(
@@ -805,7 +805,7 @@ p_pred_diff_hol_intensity4 <-
   ) %>%
   dplyr::filter(p_index) %>%
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels %>% rev())) %>%
-  ggplot(aes(x = intensity_1200 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1250 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
@@ -827,13 +827,13 @@ p_pred_diff_hol_intensity5 <-
   ) %>%
   dplyr::filter(p_index) %>%
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels %>% rev())) %>%
-  ggplot(aes(x = intensity_1200 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1250 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1200 cm"^{-1}), 
-       title = expression("Intensity at 1200 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1250 cm"^{-1}), 
+       title = expression("Intensity at 1250 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
   theme(legend.position = "bottom") +
   scale_color_manual(
@@ -849,13 +849,13 @@ p_pred_diff_hol_intensity6 <-
   ) %>%
   dplyr::filter(p_index) %>%
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels %>% rev())) %>%
-  ggplot(aes(x = intensity_1550 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1590 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1550 cm"^{-1}), 
-       title = expression("Intensity at 1550 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1590 cm"^{-1}), 
+       title = expression("Intensity at 1590 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
   theme(legend.position = "bottom") +
   scale_color_manual(
@@ -918,13 +918,13 @@ d_pred_diff_intensities %>%
       dplyr::select(data_type, hol_hat_or, hol_hat, carb, hol_residuals, model)
   ) %>%
   dplyr::filter(p_index_test) %>%
-  ggplot(aes(x = intensity_1200 %>% scale(), y = hol_residuals, colour = model)) + 
+  ggplot(aes(x = intensity_1250 %>% scale(), y = hol_residuals, colour = model)) + 
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point() +
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(model ~ cut(carb, breaks = c(-1.45, -0.883, 0.454, 1.16))) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1200 cm"^{-1}), 
-       title = expression("Intensity at 1200 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1250 cm"^{-1}), 
+       title = expression("Intensity at 1250 cm"^{-1})) +
   guides(colour = guide_legend(title = "Data type")) +
   theme(legend.position = "bottom")
 
@@ -934,13 +934,13 @@ d_pred_diff_intensities %>%
       dplyr::select(data_type, hol_hat_or, hol_hat, carb, hol_residuals, model)
   ) %>%
   dplyr::filter(p_index_test) %>%
-  ggplot(aes(x = intensity_1550 %>% scale(), y = hol_residuals, colour = model)) +
+  ggplot(aes(x = intensity_1590 %>% scale(), y = hol_residuals, colour = model)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point() +
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(model ~ cut(carb, breaks = c(-1.45, -0.883, 0.454, 1.16))) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1550 cm"^{-1}), 
-       title = expression("Intensity at 1550 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1590 cm"^{-1}), 
+       title = expression("Intensity at 1590 cm"^{-1})) +
   guides(colour = guide_legend(title = "Data type")) +
   theme(legend.position = "bottom")
 
@@ -976,13 +976,13 @@ p_pred_diff_hol_intensity8 <-
       dplyr::select(data_type, hol_hat_or, hol_hat, carb)
   ) %>%
   dplyr::filter(p_index_test2) %>%
-  ggplot(aes(x = intensity_1200 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1250 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point() +
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(data_type ~ cut(carb, breaks = c(-1.45, -0.883, 0.454, 1.16))) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1200 cm"^{-1}), 
-       title = expression("Intensity at 1200 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1250 cm"^{-1}), 
+       title = expression("Intensity at 1250 cm"^{-1})) +
   guides(colour = guide_legend(title = "Data type")) +
   theme(legend.position = "bottom")
 
@@ -993,13 +993,13 @@ p_pred_diff_hol_intensity9 <-
       dplyr::select(data_type, hol_hat_or, hol_hat, carb)
   ) %>%
   dplyr::filter(p_index_test2) %>%
-  ggplot(aes(x = intensity_1550 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_1590 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point() +
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
   facet_grid(data_type ~ cut(carb, breaks = c(-1.45, -0.883, 0.454, 1.16))) +
-  labs(y = "Prediction difference", x = expression("Intensity at 1550 cm"^{-1}), 
-       title = expression("Intensity at 1550 cm"^{-1})) +
+  labs(y = "Prediction difference", x = expression("Intensity at 1590 cm"^{-1}), 
+       title = expression("Intensity at 1590 cm"^{-1})) +
   guides(colour = guide_legend(title = "Data type")) +
   theme(legend.position = "bottom")
 ```
