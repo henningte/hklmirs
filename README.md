@@ -3,12 +3,16 @@
 
 # hklmirs
 
-This repository contains the data and code for our manuscript (in
+This repository contains the data and code for our two manuscripts (in
 preparation):
 
 > Henning Teickner and Klaus-Holger Knorr (in preparation): Improving
 > Models to Predict Holocellulose and Klason Lignin Contents for Peat
 > Soil Organic Matter with Mid Infrared Spectra.
+
+> Henning Teickner and Klaus-Holger Knorr (in preparation): Predicting
+> Absolute Holocellulose and Klason Lignin Contents for Peat Remains
+> Challenging.
 
 ### How to cite
 
@@ -17,7 +21,9 @@ Please cite this compendium as:
 > Henning Teickner and Klaus-Holger Knorr, (2022). *Compendium of R code
 > and data for “Improving Models to Predict Holocellulose and Klason
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
-> Spectra”*. Accessed 03 Mar 2022. Online at <https://doi.org/xxx/xxx>
+> Spectra” and “Predicting Absolute Holocellulose and Klason Lignin
+> Contents for Peat Remains Challenging”*. Accessed 03 Mar 2022. Online
+> at <https://github.com/henningte/hklmirs/>
 
 ## Contents
 
@@ -26,8 +32,10 @@ The **analysis** directory contains:
   - [:file\_folder: paper](/analysis/paper): R Markdown source documents
     needed to reproduce the manuscript, including figures and tables.
     The main script is
-    [001-paper-main.Rmd](analysis/paper/001-paper-main.Rmd). Additional
-    scripts are:
+    [001-paper-main.Rmd](analysis/paper/001-paper-main.Rmd). This script
+    produces both manuscripts and the corresponding supplementary
+    information. Additional scripts are:
+    
       - [002-paper-m-original-models.Rmd](analysis/paper/002-paper-m-original-models.Rmd):
         Computes the original models used in Hodgkins et al. (2018) and
         models with the same model structure, but as Bayesian models.  
@@ -55,7 +63,16 @@ The **analysis** directory contains:
         models from Hodgkins et al. (2018) and the modified models from
         `004-paper-m-reduce-underfitting.Rmd`.
       - [008-paper-supplementary.Rmd](analysis/paper/008-paper-supplementary.Rmd):
-        Computes supplementary analyses and figures.
+        Computes supplementary analyses and figures for the first
+        manuscript.
+      - [001-reply-main.Rmd](analysis/paper/001-reply-main.Rmd): This is
+        the main script for manuscript 2. It is run from within
+        `001-paper-main.Rmd` and produces the supplementary information
+        for manuscript 2.
+      - [002-reply-main.Rmd](analysis/paper/002-reply-main.Rmd): This
+        script produces the document for manuscript 2. It is run from
+        within `001-reply-main.Rmd`.
+
   - [:file\_folder: data](/analysis/data): Data used in the analysis.
     Note that raw data is not stored in [:file\_folder:
     raw\_data](/analysis/data/raw_data) (empty folder), but in
@@ -63,6 +80,9 @@ The **analysis** directory contains:
     derived\_data](/analysis/data/derived_data) contains derived data
     computed from the scripts. The raw data are derived from Hodgkins et
     al. (2018).
+
+  - [:file\_folder: stan\_models](/analysis/stan_models): The Stan model
+    used in `001-reply-main.Rmd`.
 
 The other folders in this directory follow the standard naming scheme
 and function of folders in R packages. There are the following
@@ -95,7 +115,7 @@ directories and files:
 ## How to run in your broswer or download and run locally
 
 You can download the compendium as a zip from from this URL:
-<https://doi.org/> —todo
+<https://github.com/henningte/hklmirs/>
 
 Or you can install this compendium as an R package, hklmirs, from GitHub
 with:
@@ -123,7 +143,7 @@ packages; this is managed using the R package
 
 The [Dockerfile](Dockerfile) provides instructions how to build a Docker
 image from the Dockerfile and how to run the image in a Docker
-container. It occupies disk space of \~6 Gb.
+container. It occupies disk space of \~7 Gb.
 
 When the Docker image runs in a container, go to `localhost:8787` in
 your Browser. You will find an RStudio interface where you can log in

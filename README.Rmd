@@ -24,7 +24,7 @@ library(purrr)
 ```{r metadata-manuscript, echo = FALSE, include=FALSE}
 # Manuscript metadata
 manuscript1_yaml <- rmarkdown::yaml_front_matter("analysis/paper/001-paper-main.Rmd")
-manuscript2_yaml <- rmarkdown::yaml_front_matter("analysis/paper/001-reply-main.Rmd")
+manuscript2_yaml <- rmarkdown::yaml_front_matter("analysis/paper/002-reply-main.Rmd")
 
 ## info to display
 
@@ -49,6 +49,25 @@ manuscript1$journal <-
 manuscript1$doi <-
   manuscript1_yaml$doi %>%
   paste0(".")
+
+# manuscript2
+manuscript2 <- list()
+manuscript2$authors <- "Henning Teickner and Klaus-Holger Knorr"
+
+manuscript2$year <- 
+  paste0("(",  eval(parse(text = stringr::str_extract(manuscript2_yaml$date, pattern = "^\\d+"))), "):")
+
+manuscript2$title <-
+  manuscript2_yaml$title %>%
+  paste0(".")
+
+manuscript2$journal <-
+  eval(parse(text = manuscript2_yaml$journal %>% stringr::str_remove("^`r ") %>% stringr::str_remove("`$"))) %>%
+  names()
+
+manuscript2$doi <-
+  manuscript2_yaml$doi %>%
+  paste0(".")
 ```
 
 
@@ -64,7 +83,7 @@ This repository contains the data and code for our two manuscripts (in preparati
 
 Please cite this compendium as:
 
-> Henning Teickner and Klaus-Holger Knorr, (`r format(Sys.Date(), "%Y")`). _Compendium of R code and data for "`r manuscript1_yaml$title`" and "`r manuscript2_yaml$title`"_. Accessed `r format(Sys.Date(), "%d %b %Y")`. Online at <https://doi.org/xxx/xxx>
+> Henning Teickner and Klaus-Holger Knorr, (`r format(Sys.Date(), "%Y")`). _Compendium of R code and data for "`r manuscript1_yaml$title`" and "`r manuscript2_yaml$title`"_. Accessed `r format(Sys.Date(), "%d %b %Y")`. Online at <https://github.com/henningte/hklmirs/>
 
 
 ## Contents
@@ -103,7 +122,7 @@ The other folders in this directory follow the standard naming scheme and functi
 
 ## How to run in your broswer or download and run locally
 
-You can download the compendium as a zip from from this URL: <https://doi.org/> ---todo
+You can download the compendium as a zip from from this URL: <https://github.com/henningte/hklmirs/>
 
 Or you can install this compendium as an R package, hklmirs, from GitHub with:
 
@@ -122,7 +141,7 @@ Running the whole script takes about 12 hours and occupies additional disk space
 
 Alternatively, the [Dockerfile](Dockerfile) can be used to build a Docker image from which all analyses can be reproduced. The Dockerfile ensures that all required dependencies are installed (e.g. specific R packages; this is managed using the R package [renv](https://rstudio.github.io/renv/articles/renv.html)).  
 
-The [Dockerfile](Dockerfile) provides instructions how to build a Docker image from the Dockerfile and how to run the image in a Docker container. It occupies disk space of ~6 Gb.
+The [Dockerfile](Dockerfile) provides instructions how to build a Docker image from the Dockerfile and how to run the image in a Docker container. It occupies disk space of ~7 Gb.
 
 When the Docker image runs in a container, go to `localhost:8787` in your Browser. You will find an RStudio interface where you can log in with username `rstudio` and password `hkl`. Here you can find the Rmarkdown scripts (`hklmirs/analysis/paper/001-paper-main.rmd`) as described above.  
 

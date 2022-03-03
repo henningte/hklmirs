@@ -24,8 +24,10 @@ COPY renv.lock renv.lock
 RUN chown -R rstudio . \
  && sudo -u rstudio Rscript -e 'renv::consent(provided = TRUE)' \
  && sudo -u rstudio Rscript -e 'Sys.setenv(R_INSTALL_STAGED = FALSE)' \
- && sudo -u rstudio R -e 'renv::restore(repos = c(RSPM = "https://packagemanager.rstudio.com/all/latest", CRAN = "https://cran.r-project.org/"))' \
- && sudo -u rstudio R -e 'rmeotes::install_github("henningte/hklmirs")'
+ && sudo -u rstudio R -e 'renv::restore(repos = c(RSPM = "https://packagemanager.rstudio.com/all/latest", CRAN = "https://cran.r-project.org/"))'
+
+# install compendium
+RUN sudo -u rstudio Rscript -e 'remotes::install_github("henningte/hklmirs")'
 
 # labels
 LABEL maintainer = "Henning Teickner <henning.teickner@uni-muenster.de>" \
@@ -36,7 +38,7 @@ LABEL maintainer = "Henning Teickner <henning.teickner@uni-muenster.de>" \
 
 # instructions
 
-# to build the image, navigate to the directory with the Dockerfile and run (the images has a size of ~6 Gb):
+# to build the image, navigate to the directory with the Dockerfile and run (the images has a size of ~7 Gb):
 # docker build -t hklmirs:0.0.0.9000 .
 
 # to run the image in a container, do:
