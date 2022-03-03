@@ -1,0 +1,1432 @@
+---
+title: 'Supplementary Information to: "Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging"'
+author: "Henning Teickner, Klaus-Holger Knorr"
+date: ""
+output: 
+  bookdown::pdf_book:
+    keep_tex: true
+    citation_package: natbib
+    toc: false
+bibliography: references
+biblio-style: unsrtnat
+natbiboptions: super
+header-includes:
+   - \usepackage{float}
+   - \usepackage{lineno}
+   - \linenumbers
+   - \usepackage{setspace}
+   - \doublespacing
+---
+
+```{r setup-reply, include=FALSE}
+knitr::opts_chunk$set(fig.align = "center", 
+                      fig.pos = "H",
+                      echo = FALSE,
+                      cache = TRUE)
+```
+
+# Methods
+
+For our analysis, we used three models for each holocellulose and Klason lignin:
+
+1. The models described in @Hodgkins.2018 to predict holocellulose and Klason lignin contents from mid infrared spectra, but recomputed in a Bayesian framework. This is the "original Bayesian model" in [---todo:ref]. These models were used to reproduce the computations in @Hodgkins.2018. Here, these models are called "original" models.
+
+2. A modified model to predict each, holocellulose and Klason lignin contents from mid infrared spectra. These are the models called "best binned spectra" models in [---todo:ref]. A brief description of these models is given in section [Computation of modified models to predict organic matter holocellulose and Klason lignin contents from mid infrared spectra]. These models are used to reanalyze holocellulose and Klason lignin depth profiles for the two latitude classes defined in @Hodgkins.2018, as described in section [Depth profiles].
+
+3. The same models as in number 2, but extended such that it does not only predict holocellulose or Klason lingin contents, but also describes the latitudinal gradient in average near-surface holocellulose or Klason lingin contents. These models are described in detail in section [Latitudinal gradients].
+
+To differentiate the models, we call the models from number 1 "original models", the models from number 2 "modified models using only the mid infrared spectra" and "Modified, only MIRS-based" in figure \@ref(fig:reply-res-p-latitude-poc-slope), and the models from number 3 (whenever it is not clear from the context which model we refer to) "our models for the latitudinal gradient" and "Modified" in figure \@ref(fig:reply-res-p-latitude-poc-slope). 
+
+## Computation of modified models to predict organic matter holocellulose and Klason lignin contents from mid infrared spectra
+
+Computation of the modified models using only the mid infrared spectra (MIRS) is described in detail in [---todo:ref]. In brief, we used the same training data as @Hodgkins.2018 and a Bayesian linear regression model which we computed with Markov Chain Monte Carlo (MCMC) sampling using brms [@Burkner.2017; @Burkner.2018] and rstan [@StanDevelopmentTeam.2020] which are both interfaces to Stan [@StanDevelopmentTeam.2021]. In contrast to the original models of @Hodgkins.2018, we (1) used a beta distribution as likelihood function instead of assuming a Gaussian distribution, because holocellulose and Klason lignin contents cannot be negative or larger than 100 mass-%, we (2) did not use manually selected peaks extracted from the spectra, but all the $z$-transformed absorbance values after baseline correction, normalization, and binning (bin width = 20 cm$^{-1}$), and we (3) did not use simple linear regression, but regularized linear regression by using a regularized horseshoe prior [@Piironen.2017a; @Piironen.2017b] for coefficients for spectral variables. For the intercept and for the scale parameter of the beta distribution, we used weakly informative default priors of rstanarm [@Goodrich.2020] and brms [@Burkner.2017; @Burkner.2018].
+
+## Reanalysis of latitudinal and depth patterns, considering prediction uncertainty of the mid infrared-based models
+
+### Depth profiles
+
+Predictions of the modified models using MIRS only were used to create figure 2<!---\@ref(fig:reply-res-p-depth-profiles-latitude)---> in the main text. For this, we extracted posterior draws from the models and for each MCMC iteration fitted a LOESS smoother with the same parameters as @Hodgkins.2018. From the fitted values (average predictions), we computed predictions across depth and from these 95% uncertainty intervals. We contrast these predictions and intervals with the intervals as computed by @Hodgkins.2018 where the prediction uncertainty of the model is not considered.   
+
+We acknowledge that this is no full Bayesian analysis. In a fully Bayesian analysis and uncertainty propagation, parameters for the smoother would have assigned prior distributions and the distribution of the parameters for the LOESS smoother would inform also the parameters of the regression model predicting holocellulose and Klason lignin contents, respectively, from the spectral data.  
+
+We did not compute a full Bayesian model here for the following reasons:  
+
+1. Since representative training data are missing, both the original and modified models cannot be fully validated and prediction uncertainties are probably larger than computed with these models [---todo:ref]. Since representative test data are missing, these additional uncertainties cannot be estimated. We assume that these uncertainties are larger than those induced by parameter uncertainty from models for the depth profiles. 
+
+2. The 45$^\circ$ latitude threshold applied in separating the data is a heuristic threshold to analyze some differences, but there is no specific reason about choosing this or some other value, except that sample numbers would be less balanced for this particular dataset. The goal therefore was not to compute a model which describes the underlying data optimally, but to show how depth profiles of the two heuristic latitude classes differ if one uses the same method as @Hodgkins.2018 (to compute the depth profile), but considers the prediction uncertainty of the models.    
+
+The modified models using only the MIRS were also used to compute median values and confidence intervals mentioned in the main text in section "Klason lignin content and residual enrichment in (sub)tropical peatlands probably are larger". In these computations, we also considered the predictive uncertainty of the original models (the Bayesian formulation described in ---todo:ref).
+
+### Latitudinal gradients
+
+```{r m-reply-latitude-fit-1, include=FALSE}
+# compile the stan model
+s1 <- rstan::stan_model("../stan_models/reply_stan_latitude.stan")
+
+## create data list for the stan model
+
+# peat MIRS, bin width: 20
+d_peat_bin20_scale <-
+  d_underfitting_flat[[2]] %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = TRUE, scale = TRUE)
+d_peat_bin20_scale <-
+  tibble::tibble(
+    center = attr(d_peat_bin20_scale, "scaled:center"),
+    scale = attr(d_peat_bin20_scale, "scaled:scale")
+  )
+
+d_peat_bin20_flat <-
+  d_peat %>%
+  ir::ir_bin(width = 20) %>%
+  ir::ir_flatten()
+
+d_peat_bin20 <- 
+  d_peat_bin20_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = d_peat_bin20_scale$center, 
+        scale = d_peat_bin20_scale$scale) %>%
+  as.data.frame()
+
+# index for near-surface peat samples
+core_sample_count <- table(d_peat[d_peat$sample_depth_lower <= 50, ]$core_label)
+cores_to_keep <- names(core_sample_count)[core_sample_count >= 0]
+index <- d_peat$core_label %in% cores_to_keep & d_peat$sample_depth_lower <= 50
+
+index <- d_peat$sample_depth_lower <= 50
+index_core <-
+  d_peat[index, ]$core_label %>%
+  as.factor() %>%
+  as.integer()
+
+# holocellulose
+s1_data_holocellulose <-
+  list(
+    N = 
+      d_underfitting[[2]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines") %>%
+      nrow(),
+    Y = 
+      d_underfitting[[2]] %>% 
+      dplyr::select(-kl) %>% 
+      dplyr::filter(d$sample_type != "old magazines") %>%
+      dplyr::pull("hol"),
+    K = 
+      d_underfitting[[2]] %>% 
+      dplyr::select(-kl, -hol) %>% 
+      ncol(),
+    X = 
+      d_underfitting[[2]] %>% 
+      dplyr::select(-kl, -hol) %>%
+      dplyr::filter(d$sample_type != "old magazines") %>%
+      as.matrix(),
+    hs_df = 1,
+    hs_df_global = 1,
+    hs_df_slab = 4,
+    hs_scale_global = prior_hs_tau0[[2]],
+    hs_scale_slab = 2,
+    prior_only = 0,
+    N1 = nrow(d_peat %>% dplyr::filter(index)),
+    X1 = 
+      d_peat_bin20 %>% 
+      dplyr::filter(index) %>%
+      as.matrix(),
+    index_core = index_core,
+    N1_cores = length(unique(index_core)),
+    latitudes = 
+      d_peat %>%
+      dplyr::filter(index) %>%
+      dplyr::filter(!duplicated(index_core)) %>%
+      dplyr::pull(sampling_latitude) %>%
+      scale() %>%
+      as.numeric(),
+    a_latitude_mu = -0.8, # -1.1
+    a_latitude_sigma = 0.08,
+    b_latitude_mu = 0,
+    b_latitude_sigma = 0.3,
+    phi_pop_a = 120,
+    phi_pop_b = 15,
+    phi_pop_scale = 5,
+    phi_core_a = 50,
+    phi_core_b = 5,
+    phi_core_scale = 5,
+    phi_a = 90,
+    phi_b = 20,
+    phi_scale = 20,
+    Intercept_sigma = 0.25
+  )
+
+# Klason lignin
+s1_data_klason_lignin <- s1_data_holocellulose
+s1_data_klason_lignin$N <- 
+  d_underfitting[[2]] %>% 
+  dplyr::select(-hol) %>% 
+  dplyr::filter(d$sample_type != "office paper") %>%
+  nrow()
+s1_data_klason_lignin$Y <-
+  d_underfitting[[2]] %>% 
+  dplyr::select(-hol) %>% 
+  dplyr::filter(d$sample_type != "office paper") %>%
+  dplyr::pull("kl")
+s1_data_klason_lignin$K <-
+  d_underfitting[[2]] %>% 
+  dplyr::select(-kl, -hol) %>% 
+  ncol()
+s1_data_klason_lignin$X <-
+  d_underfitting[[2]] %>% 
+  dplyr::select(-kl, -hol) %>%
+  dplyr::filter(d$sample_type != "office paper") %>%
+  as.matrix()
+s1_data_klason_lignin$X1 <- 
+  d_peat_bin20 %>% 
+  dplyr::filter(index) %>%
+  as.matrix()
+s1_data_klason_lignin$hs_scale_global <- prior_hs_tau0[[2]]
+s1_data_klason_lignin$a_latitude_mu <- -0.2
+s1_data_klason_lignin$a_latitude_sigma <- 0.08 # with 0.2, ALL contents get shrunk toward smaller values
+s1_data_klason_lignin$b_latitude_sigma <- 0.3
+s1_data_klason_lignin$phi_pop_a <- 120
+s1_data_klason_lignin$phi_core_a <- 10
+```
+
+To reproduce the latitudinal gradients (figure 1<!---\@ref(fig:reply-res-p-sites-latitude)---> in the main text), we computed a hierarchical Bayesian model which is an extension to the modified model to predict holocellulose and Klason lignin contents using only the spectra, respectively. The extension is that we generate predictions for the peat samples by treating their holocellulose content (or Klason lignin content) as missing data. These predicted values are linked to a second model which is a linear regression model for the latitudinal gradient in average surface peat contents of holocellulose (or Klason lignin). Holocellulose (or Klason lignin) contents of individual peat samples are modeled with a beta distribution for each peat core. The mean value of these beta models is informed by a beta distribution describing the average surface peat content of an assumed population of peat cores. Similarly, the scale parameter of the beta models for each cores is informed by a gamma distribution describing the average scale parameter of an assumed population of peat cores. The full model for holocellulose content is:
+
+$$
+\begin{aligned}
+\text{Y}_1[i] &\sim \text{beta}(\mu_{1}[i] \phi, (1-\mu_{1}[i])\phi)\\
+Y_{2}[j] &\sim \text{beta}(\mu_{2}[j] \phi, (1-\mu_{2}[j])\phi)\\
+\mu_{1} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}\right)\\
+\mu_{2} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}_1\right)\\
+\alpha &\sim \text{normal(0, 0.2)}\\
+\beta &\sim \text{horseshoe}(zb, hs_{local}, hs_{global}, hs_{scale\_slab}^2 \cdot hs_{slab})\\
+\phi &\sim \text{beta}(`r s1_data_holocellulose$phi_a`, `r s1_data_holocellulose$phi_b/s1_data_holocellulose$phi_scale`)\\
+Y_{2}[j] &\sim \text{beta}(\mu_{\text{core}}[\text{index\_core}[j]] \phi_{\text{core}}[\text{index\_core}[j]], (1-\mu_{\text{core}}[\text{index\_core}[j]])\phi_{\text{core}}[\text{index\_core}[j]])\\
+\mu_{\text{core}}[k] &\sim \text{beta}(\mu_{\text{pop}}[k] \phi_{\text{pop}}, (1-\mu_{\text{pop}}[k])\phi_{\text{pop}})\\
+\mu_{\text{pop}}[k] &= \text{logit}^{-1}\left(\alpha_{\text{latitude}} + \beta_{\text{latitude}}\text{x}_{\text{latitude}}[k]\right)\\
+\phi_{\text{core}} &\sim \text{gamma}(`r s1_data_holocellulose$phi_core_a`, `r s1_data_holocellulose$phi_core_b/s1_data_holocellulose$phi_core_scale`)\\
+\phi_{\text{pop}} &\sim \text{gamma}(`r s1_data_holocellulose$phi_pop_a`, `r s1_data_holocellulose$phi_pop_b/s1_data_holocellulose$phi_pop_scale`)\\
+\alpha_{\text{latitude}} &\sim \text{normal}(`r s1_data_holocellulose$a_latitude_mu`, `r s1_data_holocellulose$a_latitude_sigma`)\\
+\beta_{\text{latitude}} &\sim \text{normal}(`r s1_data_holocellulose$b_latitude_mu`, `r s1_data_holocellulose$b_latitude_sigma`)\\
+\end{aligned}
+$$
+
+Where $\text{Y}_1$ are the measured holocellulose contents of the training data; $\mu_{1}$ are the respective mean values modeled with the MIRS, only; $i$ is an index for each sample of the training data; $Y_{2}$ are the estimated peat holocellulose contents modeled simultaneously from the MIRS ($\mu_{2}$) and from the average average near-surface peat holocellulose contents per core ($\mu_{\text{core}}$); $j$ is an index for each sample in the peat data; $\text{index\_core}$ is a vector assigning each sample in the peat data to the respective core index; $k$ is an index for each unique core in the peat data. The average average near-surface peat holocellulose contents per core ($\mu_{\text{core}}$) are in turn modeled in dependency on the latitude.
+
+The full model for Klason lignin is:
+
+$$
+\begin{aligned}
+\text{Y}_1[i] &\sim \text{beta}(\mu_{1}[i] \phi, (1-\mu_{1}[i])\phi)\\
+Y_{2}[j] &\sim \text{beta}(\mu_{2}[j] \phi, (1-\mu_{2}[j])\phi)\\
+\mu_{1} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}\right)\\
+\mu_{2} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}_1\right)\\
+\alpha &\sim \text{normal(0, 0.2)}\\
+\beta &\sim \text{horseshoe}(zb, hs_{local}, hs_{global}, hs_{scale\_slab}^2 \cdot hs_{slab})\\
+\phi &\sim \text{beta}(`r s1_data_klason_lignin$phi_a`, `r s1_data_klason_lignin$phi_b/s1_data_klason_lignin$phi_scale`)\\
+Y_{2}[j] &\sim \text{beta}(\mu_{\text{core}}[\text{index\_core}[j]] \phi_{\text{core}}[\text{index\_core}[j]], (1-\mu_{\text{core}}[\text{index\_core}[j]])\phi_{\text{core}}[\text{index\_core}[j]])\\
+\mu_{\text{core}}[k] &\sim \text{beta}(\mu_{\text{pop}}[k] \phi_{\text{pop}}, (1-\mu_{\text{pop}}[k])\phi_{\text{pop}})\\
+\mu_{\text{pop}}[k] &= \text{logit}^{-1}\left(\alpha_{\text{latitude}} + \beta_{\text{latitude}}\text{x}_{\text{latitude}}[k]\right)\\
+\phi_{\text{core}} &\sim \text{gamma}(`r s1_data_klason_lignin$phi_core_a`, `r s1_data_klason_lignin$phi_core_b/s1_data_klason_lignin$phi_core_scale`)\\
+\phi_{\text{pop}} &\sim \text{gamma}(`r s1_data_klason_lignin$phi_pop_a`, `r s1_data_klason_lignin$phi_pop_b/s1_data_klason_lignin$phi_pop_scale`)\\
+\alpha_{\text{latitude}} &\sim \text{normal}(`r s1_data_klason_lignin$a_latitude_mu`, `r s1_data_klason_lignin$a_latitude_sigma`)\\
+\beta_{\text{latitude}} &\sim \text{normal}(`r s1_data_klason_lignin$b_latitude_mu`, `r s1_data_klason_lignin$b_latitude_sigma`)\\
+\end{aligned}
+$$
+
+```{r m-reply-latitude-ppc}
+## prior preditive check
+
+# function to perform the prior predictive check
+ppc_latitude <- 
+  function(x_latitude, 
+           a_latitude_mu, 
+           a_latitude_sigma, 
+           b_latitude_mu, 
+           b_latitude_sigma, 
+           phi_pop_a, 
+           phi_pop_b, 
+           phi_pop_scale, 
+           phi_core_a, 
+           phi_core_b, 
+           phi_core_scale, 
+           nsim = 1e4) {
+    
+    a_latitude <- rnorm(nsim, a_latitude_mu, a_latitude_sigma)
+    b_latitude <- rnorm(nsim, b_latitude_mu, b_latitude_sigma)
+    phi_pop <- rgamma(nsim, phi_pop_a, phi_pop_b) * phi_pop_scale
+    phi_core <-  purrr::map(x_latitude, function(x) rgamma(nsim, phi_core_a, phi_core_b) * phi_core_scale)
+    
+    mu_pop <- purrr::map(x_latitude, function(x) brms::inv_logit_scaled(a_latitude + b_latitude * x))
+    mu_core <- purrr::map(mu_pop, function(x) rbeta(nsim, x * phi_pop, (1 - x) * phi_pop))
+    Y_1 <- purrr::map2(mu_core, phi_core, function(x, y) rbeta(nsim, x * y, (1 - x) * y))
+    
+    tibble::tibble(
+      iter = rep(seq_len(nsim), length(!!x_latitude)),
+      x_latitude = rep(x_latitude, each = nsim),
+      a_latitude = rep(a_latitude, length(!!x_latitude)),
+      b_latitude = rep(b_latitude, length(!!x_latitude)),
+      phi_pop = rep(phi_pop, length(!!x_latitude)),
+      phi_core = unlist(phi_core),
+      mu_pop = unlist(mu_pop),
+      mu_core = unlist(mu_core),
+      Y_1 = unlist(Y_1)
+    )
+  }
+
+x_latitude <- 
+  seq(min(scale(unique(d_peat$sampling_latitude))),
+      max(scale(unique(d_peat$sampling_latitude))), 
+      length.out = 10)
+
+d_ppc_latitude <- 
+  dplyr::bind_rows(
+    ppc_latitude(x_latitude = x_latitude,
+               a_latitude_mu = s1_data_holocellulose$a_latitude_mu, 
+               a_latitude_sigma = s1_data_holocellulose$a_latitude_sigma, 
+               b_latitude_mu = s1_data_holocellulose$b_latitude_mu, 
+               b_latitude_sigma = s1_data_holocellulose$b_latitude_sigma, 
+               phi_pop_a = s1_data_holocellulose$phi_pop_a, 
+               phi_pop_b = s1_data_holocellulose$phi_pop_b,
+               phi_pop_scale = s1_data_holocellulose$phi_pop_scale,
+               phi_core_a = s1_data_holocellulose$phi_core_a,
+               phi_core_b = s1_data_holocellulose$phi_core_b,
+               phi_core_scale = s1_data_holocellulose$phi_core_scale,
+               nsim = 4 * 1e3) %>%
+      dplyr::mutate(variable_y = "Holocellulose"),
+    ppc_latitude(x_latitude = x_latitude,
+               a_latitude_mu = s1_data_klason_lignin$a_latitude_mu, 
+               a_latitude_sigma = s1_data_klason_lignin$a_latitude_sigma, 
+               b_latitude_mu = s1_data_klason_lignin$b_latitude_mu, 
+               b_latitude_sigma = s1_data_klason_lignin$b_latitude_sigma, 
+               phi_pop_a = s1_data_klason_lignin$phi_pop_a, 
+               phi_pop_b = s1_data_klason_lignin$phi_pop_b,
+               phi_pop_scale = s1_data_klason_lignin$phi_pop_scale,
+               phi_core_a = s1_data_klason_lignin$phi_core_a,
+               phi_core_b = s1_data_klason_lignin$phi_core_b,
+               phi_core_scale = s1_data_klason_lignin$phi_core_scale,
+               nsim = 4 * 1e3) %>%
+      dplyr::mutate(variable_y = "Klason lignin")
+  )
+  
+# histogram of average surface peat content for a core with average latitude
+p_ppc_latitude1 <-
+  d_ppc_latitude %>%
+  dplyr::filter(x_latitude == unique(x_latitude)[[1]]) %>%
+  ggplot(aes(x = brms::inv_logit_scaled(a_latitude) * 100)) +
+  geom_histogram(bins = 30) +
+  labs(y = "Counts", x = expression(alpha[latitude]~"(inverse logit) [mass-%]")) +
+  facet_wrap(~ variable_y)
+
+# plot of 100 regression lines drawn from the joint prior distribution
+x_latitude_center <- attr(scale(unique(d_peat$sampling_latitude)), "scaled:center")
+x_latitude_scale <- attr(scale(unique(d_peat$sampling_latitude)), "scaled:scale")
+p_ppc_latitude2 <-
+  d_ppc_latitude %>%
+  dplyr::filter(iter <= 100) %>%
+  ggplot(aes(x = x_latitude * x_latitude_scale + x_latitude_center, y = mu_core * 100, group = iter)) +
+  geom_line(stat = "smooth", formula = y ~ x, method = "lm", se = FALSE, colour = "black", alpha = 0.3) +
+  labs(y = expression(mu[core]~"[mass-%]"), x = expression(Latitude~"[°]")) +
+  facet_wrap(~ variable_y)
+
+# plot range in which content for individual samples may lie
+p_ppc_latitude3 <-
+  d_ppc_latitude %>%
+  dplyr::filter(iter <= 100) %>%
+  ggplot(aes(x = x_latitude * x_latitude_scale + x_latitude_center, y = Y_1 * 100, group = iter)) +
+  geom_point(alpha = 0.3) +
+  labs(y = expression(Y[2]*"["*j*"]"~"[mass-%]"), x = expression(Latitude~"[°]")) +
+  facet_wrap(~ variable_y)
+
+# histogram for a marginal peat sample
+p_ppc_latitude4 <-
+  d_ppc_latitude %>%
+  dplyr::filter(x_latitude == unique(x_latitude)[[1]]) %>%
+  ggplot(aes(x = Y_1 * 100)) +
+  geom_histogram(bins = 30) +
+  labs(y = "Counts", x = expression(Y[2]*"["*j*"]"~"[mass-%]")) +
+  facet_wrap(~ variable_y)
+```
+
+Parameter values for prior distributions were chosen based on a prior predictive simulation by plotting histograms and prior model predictions within the range of the predictor values (figure \@ref(fig:reply-res-p-latitude-ppc)). These plots allow to check implications of prior choices in light of the knowledge on holocellulose and Klason lignin contents available: We know e.g. from @Hayes.2015 that holocellulose (total sugar) and Klason lignin contents of peat in Ireland (from unknown depths) measured with a procedure very similar to that used by @Hodgkins.2018 [@DelaCruz.2016] range between 8 to 29 and 42 to 72 mass-%, respectively. Holocellulose and Klason lignin contents of peat forming vegetation (of boreal peatlands) have been reported to range between 25.8 to 70.9, and 8.1 to 54.3 mass-%, respectively [@Turetsky.2008; @Strakova.2010; @Bengtsson.2018]. Surface peat contents should be similar to these values and holocellulose contents generally smaller and Klason lignin contents larger due to decomposition losses [@Benner.1984; @Worrall.2017]. In addition, we adjusted prior choices (particularly by reducing the standard deviation of the global intercept of the model for the latitudinal gradient and other parameters (see below)) to avoid computational issues (see below). We assured via prior and posterior predictive checks that these adjustments neither result in too informative priors, nor in a bad fit to the data.  
+
+(ref:reply-res-p-latitude-ppc-caption) Prior predictive checks for the modified models describing the latitudinal gradient of peat core average near-surface holocellulose and Klason lignin contents. (a) Marginal prior distribution for the intercept of the latitudinal gradient model (average peat core average near-surface content at the average latitude of the sampled peat cores). (b) 100 random lines from the joint prior distribution for the intercept and slope for the latitudinal gradient (difference between average peat core average near-surface content at different latitudes). (c) Marginal prior distribution for the content of an individual peat sample at a latitude of ~`r round(unique(x_latitude)[[1]] * x_latitude_scale + x_latitude_center, 1)` $^\circ$N. (d) At a sequence of discrete latitude values 100 randomly sampled contents for individual near-surface peat samples.
+
+```{r reply-res-p-latitude-ppc, echo=FALSE, out.width="70%", fig.height=5, fig.width=6.5, fig.cap='(ref:reply-res-p-latitude-ppc-caption)'}
+p_ppc_latitude1 + p_ppc_latitude2 + p_ppc_latitude4 + p_ppc_latitude3 +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+```
+
+Our final prior choice assumes a population average near-surface content of holocellulose of ~`r brms::inv_logit_scaled(s1_data_holocellulose$a_latitude_mu) %>% magrittr::multiply_by(10) %>% round(0) %>% magrittr::multiply_by(10)` mass-% with a standard deviation of ~`r brms::inv_logit_scaled(rnorm(1e4, s1_data_holocellulose$a_latitude_mu, s1_data_holocellulose$a_latitude_sigma)) %>% sd() %>% magrittr::multiply_by(100) %>% round(0)` mass-% and of Klason lignin of ~`r brms::inv_logit_scaled(s1_data_klason_lignin$a_latitude_mu) %>% magrittr::multiply_by(10) %>% round(0) %>% magrittr::multiply_by(10)` mass-% with a standard deviation of ~`r brms::inv_logit_scaled(rnorm(1e4, s1_data_klason_lignin$a_latitude_mu, s1_data_klason_lignin$a_latitude_sigma)) %>% sd() %>% magrittr::multiply_by(100) %>% round(0)` mass-% (figure \@ref(fig:reply-res-p-latitude-ppc)). Assuming a normal(`r s1_data_holocellulose$b_latitude_mu`, `r s1_data_holocellulose$b_latitude_sigma`) prior for $\beta_{\text{latitude}}$ for both models resulted in a broad range of possible relations between contents and latitude (figure \@ref(fig:reply-res-p-latitude-ppc)). Similarly, the parameter choices for $\phi$, $\phi_{\text{core}}$, and $\phi_{\text{pop}}$ resulted in reasonable ranges of contents on the level of averages for individual cores and samples, respectively (figure \@ref(fig:reply-res-p-latitude-ppc)). 
+
+As mentioned above, some regularization was necessary to avoid computational issues: Less regularizing priors for $\alpha_{\text{latitude}}$, $\phi_{\text{core}}$, and $\phi_{\text{pop}}$ resulted in (more) divergent transitions and badly mixing MCMC chains. This behavior occurred because average population and core contents tended to 0 mass-%. This is a consequence of the inverse logit transformation which can cause high prior mass around 0 and 100 mass-% if the variability in its parameters is too large. We can exclude 0 mass-% as implausible and therefore can justify our regularization because it avoided a drift of the majority of the MCMC draws into implausible regions.   
+
+With this model, we could estimate the average difference in surface peat holocellulose (or Klason lignin) content for different latitudes while considering (1) the prediction uncertainty for each individual peat sample, (2) the uncertainty in the average surface peat contents for each peat core (which is heterogeneous across cores due to a finite number of samples and due to core-dependent depth gradients), and (3) parameter uncertainty of the regression model for the latitudinal gradient. In contrast, the original analysis did not consider uncertainty from predictions, and from computing average surface peat contents per core.
+
+To create figure 1<!--\@ref(fig:reply-res-p-sites-latitude)--> in the main text, we used the models for the latitudinal gradient and samples from the posterior distribution to compute the predicted average and 95% confidence interval for a range of latitude values and we added predictions for the average contents for each of the sampled cores. Next, we recomputed the models from @Hodgkins.2018 by (1) predicting average peat sample contents with the original models (the Bayesian version described in ---todo:ref), (2) averaging the near surface peat sample average contents for each core, and (3) fitting an ordinary least squares regression line to these average core values. For this linear model, we plotted the confidence interval across latitude and we added the computed average core near-surface contents. Thus, figure 1<!---\@ref(fig:reply-res-p-sites-latitude)---> in the main text compares the graphed values and model prediction from figure 3 in @Hodgkins.2018 with predictions from our modified analysis considering prediction uncertainty from the MIRS-based model part, and the averaging per core.  
+Additional sources for differences in predictions and prediction uncertainties in comparison to the analysis in @Hodgkins.2018 are the use of a beta distribution which constraints uncertainty intervals for extreme (near 0 and 100 mass-%) values, and the use of all spectral variables which resulted in reduced prediction uncertainties [---todo:ref]. 
+
+```{r m-reply-latitude-fit-2, include=FALSE}
+# fit model for holocellulose
+s1_fit_holocellulose <-
+  rstan::sampling(s1, 
+                  data = s1_data_holocellulose, 
+                  chains = 4, 
+                  cores = 4, 
+                  iter = iter, 
+                  warmup = iter %/% 2, 
+                  control = list(adapt_delta = 0.99, max_treedepth = 15),
+                  seed = seed)
+
+s1_res_holocellulose <- as.data.frame(rstan::extract(s1_fit_holocellulose))
+```
+
+```{r m-reply-latitude-fit-3, include=FALSE}
+# fit model for klason_lignin
+s1_fit_klason_lignin <-
+  rstan::sampling(s1, 
+                  data = s1_data_klason_lignin, 
+                  chains = 4, 
+                  cores = 4, 
+                  iter = iter, 
+                  warmup = iter %/% 2, 
+                  control = list(adapt_delta = 0.99, max_treedepth = 15),
+                  seed = seed)
+
+s1_res_klason_lignin <- as.data.frame(rstan::extract(s1_fit_klason_lignin))
+```
+
+```{r m-reply-latitude-poc}
+## posterior predictive checks
+m1.8_pred <-
+  predict(m1.8, newdata = d_peat_bin20)[d_peat$sample_depth_lower <= 50, ]
+m2.8_pred <-
+  predict(m2.8, newdata = d_peat_bin20)[d_peat$sample_depth_lower <= 50, ]
+
+# function to perform the posterior predictive check
+poc_latitude <- 
+  function(x_latitude, 
+           s1_fit, 
+           s1_data, 
+           core_i = 1) {
+    
+    s1_pars <- as.data.frame(rstan::extract(s1_fit))
+    nsim <- nrow(s1_pars)
+    
+    a_latitude <- s1_pars$a_latitude * s1_data$a_latitude_sigma + s1_data$a_latitude_mu 
+    b_latitude <- s1_pars$b_latitude * s1_data$b_latitude_sigma + s1_data$b_latitude_mu
+    phi_pop <- s1_pars$phi_pop * s1_data$phi_pop_scale
+    phi_core <-  s1_pars[stringr::str_detect(colnames(s1_pars), "phi_core\\.")] %>%
+      purrr::map_df(function(x) x * s1_data$phi_core_scale)
+    
+    mu_pop <- purrr::map(x_latitude, function(x) brms::inv_logit_scaled(a_latitude + b_latitude * x))
+    mu_core <- purrr::map(mu_pop, function(x) rbeta(nsim, x * phi_pop, (1 - x) * phi_pop))
+    Y_1 <- purrr::map(mu_core, function(x) rbeta(nsim, x * phi_core[[core_i]], (1 - x) * phi_core[[core_i]]))
+    
+    tibble::tibble(
+      iter = rep(seq_len(nsim), length(!!x_latitude)),
+      x_latitude = rep(x_latitude, each = nsim),
+      a_latitude = rep(a_latitude, length(!!x_latitude)),
+      b_latitude = rep(b_latitude, length(!!x_latitude)),
+      phi_pop = rep(phi_pop, length(!!x_latitude)),
+      phi_core = unlist(rep(phi_core[core_i], length(!!x_latitude))),
+      mu_pop = unlist(mu_pop),
+      mu_core = unlist(mu_core),
+      Y_1 = unlist(Y_1)
+    )
+    
+  }
+
+# compute posterior predictive check
+d_poc_latitude <- 
+  dplyr::bind_rows(
+  dplyr::bind_rows(
+    poc_latitude(x_latitude = x_latitude, 
+                 s1_fit = s1_fit_holocellulose, 
+                 s1_data = s1_data_holocellulose, 
+                 core_i = 9) %>%
+      dplyr::mutate(variable_y = "Holocellulose"),
+    poc_latitude(x_latitude = x_latitude, 
+                 s1_fit = s1_fit_klason_lignin, 
+                 s1_data = s1_data_klason_lignin, 
+                 core_i = 9) %>%
+      dplyr::mutate(variable_y = "Klason lignin")
+  ) %>%
+    dplyr::mutate(sample_type = "Posterior"),
+  d_ppc_latitude %>%
+    dplyr::mutate(sample_type = "Prior")
+  )
+  
+# histogram of average surface peat content for a core with average latitude
+p_poc_latitude1 <-
+  d_poc_latitude %>%
+  dplyr::filter(x_latitude == unique(x_latitude)[[1]]) %>%
+  ggplot(aes(x = brms::inv_logit_scaled(a_latitude) * 100)) +
+  geom_histogram(bins = 30) +
+  labs(y = "Counts", x = expression(alpha[latitude]~"(inverse logit) [mass-%]")) +
+  facet_grid(sample_type ~ variable_y, scales = "free_x")
+
+# plot of 100 regression lines drawn from the joint prior distribution
+x_latitude_center <- attr(scale(unique(d_peat$sampling_latitude)), "scaled:center")
+x_latitude_scale <- attr(scale(unique(d_peat$sampling_latitude)), "scaled:scale")
+p_poc_latitude2 <-
+  d_poc_latitude %>%
+  dplyr::filter(iter <= 100) %>%
+  ggplot(aes(x = x_latitude * x_latitude_scale + x_latitude_center, y = mu_core * 100, group = iter)) +
+  geom_line(stat = "smooth", formula = y ~ x, method = "lm", se = FALSE, colour = "black", alpha = 0.3) +
+  labs(y = expression(mu[core]~"[mass-%]"), x = expression(Latitude~"[°]"))  +
+  facet_grid(sample_type ~ variable_y)
+
+# plot range in which content for individual samples may lie
+p_poc_latitude3 <-
+  d_poc_latitude %>%
+  dplyr::filter(iter <= 100) %>%
+  ggplot(aes(x = x_latitude * x_latitude_scale + x_latitude_center, 
+             y = Y_1 * 100, 
+             group = iter)) +
+  geom_point(alpha = 0.3) +
+  labs(y = expression(Y[2]*"["*j*"]"~"[mass-%]"), x = expression(Latitude~"[°]")) +
+  facet_grid(sample_type ~ variable_y)
+
+# histogram for a marginal peat sample
+p_poc_latitude4 <-
+  d_poc_latitude %>%
+  dplyr::filter(x_latitude == unique(x_latitude)[[1]]) %>%
+  ggplot(aes(x = Y_1 * 100)) +
+  geom_histogram(bins = 30) +
+  labs(y = "Counts", x = expression(Y[2]*"["*j*"]"~"[mass-%]")) +
+  facet_grid(sample_type ~ variable_y, scales = "free_x")
+
+# histogram of marginal slope of latitudinal gradient
+p_poc_latitude5 <-
+  d_poc_latitude %>%
+  dplyr::filter(x_latitude == unique(x_latitude)[[1]]) %>%
+  ggplot(aes(x = b_latitude)) +
+  geom_histogram(bins = 30) +
+  geom_vline(xintercept = 0, colour = "grey") +
+  labs(y = "Counts", x = expression(beta[latitude])) +
+  facet_grid(sample_type ~ variable_y, scales = "free_x")
+
+# summarize the data to compare predictions to those for the unconstrained MIRS-based model
+d_poc_latitude_summary <-
+  d_poc_latitude %>%
+  dplyr::group_by(sample_type, variable_y, x_latitude) %>%
+  dplyr::summarise(mu_pop_lwr = quantile(mu_pop, probs = 0.025),
+                   mu_pop_fit = quantile(mu_pop, probs = 0.5),
+                   mu_pop_upr = quantile(mu_pop, probs = 0.975),
+                   .groups = "drop")
+
+d_y_yhat <-
+  dplyr::bind_rows(
+    s1_res_holocellulose %>%
+      dplyr::select(dplyr::contains("Y1.")) %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = mean(x),
+          lwr = quantile(x, probs = 0.025),
+          upr = quantile(x, probs = 0.975)
+        )
+      }) %>%
+      dplyr::bind_cols(as.data.frame(m1.8_pred)),
+    s1_res_klason_lignin %>%
+      dplyr::select(dplyr::contains("Y1.")) %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = mean(x),
+          lwr = quantile(x, probs = 0.025),
+          upr = quantile(x, probs = 0.975)
+        )
+      }) %>%
+      dplyr::bind_cols(as.data.frame(m2.8_pred))
+  ) %>%
+  dplyr::mutate(
+    x_latitude = rep((d_peat$sampling_latitude[d_peat$sample_depth_lower <= 50] - x_latitude_center)/x_latitude_scale, 2),
+    variable_y = rep(c("Holocellulose", "Klason lignin"), each = sum(d_peat$sample_depth_lower <= 50))
+  )
+
+d_y_yhat_long <-
+  dplyr::bind_rows(
+    s1_res_holocellulose %>%
+      dplyr::select(dplyr::contains("Y1.")) %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = mean(x),
+          lwr = quantile(x, probs = 0.025),
+          upr = quantile(x, probs = 0.975)
+        )
+      })  %>%
+      dplyr::bind_rows(
+        m1.8_pred %>% 
+          as.data.frame() %>%
+          dplyr::rename(fit = "Estimate",
+                        lwr = "Q2.5",
+                        upr = "Q97.5"),
+        m1.2 %>%
+          posterior_predict(newdata = d_peat_res[d_peat$sample_depth_lower <= 50, ] %>% dplyr::mutate(carb = as.numeric(carb))) %>%
+          as.data.frame() %>%
+          purrr::map_df(function(x) {
+            tibble::tibble(
+              fit = mean(x),
+              lwr = quantile(x, probs = 0.025),
+              upr = quantile(x, probs = 0.975)
+            ) 
+          })
+        ),
+    s1_res_klason_lignin %>%
+      dplyr::select(dplyr::contains("Y1.")) %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = mean(x),
+          lwr = quantile(x, probs = 0.025),
+          upr = quantile(x, probs = 0.975)
+        )
+      }) %>%
+      dplyr::bind_rows(
+        m2.8_pred %>% 
+          as.data.frame() %>%
+          dplyr::rename(fit = "Estimate",
+                        lwr = "Q2.5",
+                        upr = "Q97.5"),
+        m2.2 %>%
+          posterior_predict(newdata = d_peat_res[d_peat$sample_depth_lower <= 50, ] %>% dplyr::mutate(arom15arom16 = as.numeric(arom15arom16))) %>%
+          as.data.frame() %>%
+          purrr::map_df(function(x) {
+            tibble::tibble(
+              fit = mean(x),
+              lwr = quantile(x, probs = 0.025),
+              upr = quantile(x, probs = 0.975)
+            ) 
+          })
+      )
+  ) %>%
+  dplyr::mutate(
+    core_label = rep(d_peat$core_label[d_peat$sample_depth_lower <= 50], 6),
+    x_latitude = rep((d_peat$sampling_latitude[d_peat$sample_depth_lower <= 50] - x_latitude_center)/x_latitude_scale, 6),
+    variable_y = rep(c("Holocellulose", "Klason lignin"), each = sum(d_peat$sample_depth_lower <= 50) * 3),
+    model = rep(c("Modified", "Modified, only MIRS-based", "Original", "Modified", "Modified, only MIRS-based", "Original"), each = sum(d_peat$sample_depth_lower <= 50))
+  )
+
+# summary of predictions for sites
+d_y_yhat_long_sites <-
+  dplyr::bind_rows(
+    s1_res_holocellulose %>%
+      dplyr::select(dplyr::contains("mu_core.")) %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit_mean = mean(x),
+          fit_lwr = quantile(x, probs = 0.025),
+          fit_upr = quantile(x, probs = 0.975)
+        )
+      }) %>%
+      dplyr::mutate(core_label = unique(d_peat$core_label[d_peat$sample_depth_lower <= 50])),
+    m1.2 %>%
+      posterior_predict(newdata = d_peat_res[d_peat$sample_depth_lower <= 50, ] %>% dplyr::mutate(carb = as.numeric(carb))) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit_mean = mean(x),
+          fit_lwr = quantile(x, probs = 0.025),
+          fit_upr = quantile(x, probs = 0.975)
+        ) 
+      }) %>%
+        dplyr::mutate(core_label = d_peat$core_label[d_peat$sample_depth_lower <= 50]) %>%
+        dplyr::group_by(core_label) %>%
+        dplyr::summarise(
+          fit_lwr = mean(fit_mean) - 2 * sd(fit_mean),
+          fit_upr = mean(fit_mean) + 2 * sd(fit_mean),
+          fit_mean = mean(fit_mean),
+          .groups = "drop"
+        ),
+    s1_res_klason_lignin %>%
+      dplyr::select(dplyr::contains("mu_core.")) %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit_mean = mean(x),
+          fit_lwr = quantile(x, probs = 0.025),
+          fit_upr = quantile(x, probs = 0.975)
+        )
+      })%>%
+      dplyr::mutate(core_label = unique(d_peat$core_label[d_peat$sample_depth_lower <= 50])),
+        m2.2 %>%
+          posterior_predict(newdata = d_peat_res[d_peat$sample_depth_lower <= 50, ] %>% dplyr::mutate(arom15arom16 = as.numeric(arom15arom16))) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit_mean = mean(x),
+          fit_lwr = quantile(x, probs = 0.025),
+          fit_upr = quantile(x, probs = 0.975)
+        ) 
+      }) %>%
+        dplyr::mutate(core_label = d_peat$core_label[d_peat$sample_depth_lower <= 50]) %>%
+        dplyr::group_by(core_label) %>%
+        dplyr::summarise(
+          fit_lwr = mean(fit_mean) - 2 * sd(fit_mean),
+          fit_upr = mean(fit_mean) + 2 * sd(fit_mean),
+          fit_mean = mean(fit_mean),
+          .groups = "drop"
+        )
+  ) %>%
+  dplyr::mutate(
+    core_label = rep(unique(d_peat$core_label[d_peat$sample_depth_lower <= 50]), 4),
+    x_latitude = rep((d_peat$sampling_latitude[d_peat$sample_depth_lower <= 50 & !duplicated(d_peat$core_label)] - x_latitude_center)/x_latitude_scale, 4),
+    variable_y = rep(c("Holocellulose", "Klason lignin"), each = sum(!duplicated(d_peat$core_label)) * 2),
+    model = rep(c("Modified", "Original", "Modified", "Original"), each = sum(!duplicated(d_peat$core_label)))
+  )
+
+d_y_yhat_long_sites <-
+  d_y_yhat_long %>%
+  dplyr::group_by(variable_y, model, core_label) %>%
+  dplyr::summarise(x_latitude = mean(x_latitude),
+                   fit_mean = mean(fit),
+                   fit_lwr = mean(fit) - sd(fit),
+                   fit_upr = mean(fit) + sd(fit),
+                   .groups = "drop")
+
+# add predictions from the original model
+d_poc_latitude_summary <-
+  d_poc_latitude_summary %>%
+  dplyr::bind_rows(
+    {
+      m <- lm(fit_mean ~ x_latitude, 
+              data = 
+                d_y_yhat_long_sites %>%
+                dplyr::filter(model == "Original" & variable_y == "Holocellulose"))
+      
+      m_pred <- predict(m, interval = "confidence", level = 0.95, 
+                        newdata = d_poc_latitude_summary %>%
+                          dplyr::filter(sample_type == "Posterior" & variable_y == "Holocellulose")
+      )
+      
+      tibble::tibble(
+        variable_y = "Holocellulose",
+        sample_type = "Original",
+        x_latitude = x_latitude,
+        mu_pop_fit = m_pred[, 1],
+        mu_pop_lwr = m_pred[, 2],
+        mu_pop_upr = m_pred[, 3]
+      )
+    },
+    {
+      m <- lm(fit_mean ~ x_latitude, 
+              data = 
+                d_y_yhat_long_sites %>%
+                dplyr::filter(model == "Original" & variable_y == "Klason lignin"))
+      
+      m_pred <- predict(m, interval = "confidence", level = 0.95, 
+                        newdata = d_poc_latitude_summary %>%
+                          dplyr::filter(sample_type == "Posterior" & variable_y == "Klason lignin")
+      )
+      
+      tibble::tibble(
+        variable_y = "Klason lignin",
+        sample_type = "Original",
+        x_latitude = x_latitude,
+        mu_pop_fit = m_pred[, 1],
+        mu_pop_lwr = m_pred[, 2],
+        mu_pop_upr = m_pred[, 3]
+      )
+    }
+  )
+
+p_poc_latitude_6_1 <-
+  d_y_yhat_long %>%
+  ggplot(aes(x = core_label, y = fit, ymin = lwr, ymax = upr, colour = model)) +
+  geom_point(stat = "identity", position = position_dodge(0.8)) +
+  geom_errorbar(width = 0, stat = "identity", position = position_dodge(0.8)) +
+  facet_wrap(~ variable_y) +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) x * 100) +
+  labs(x = "Core", y = "Estimted content [mass-%]") +
+  guides(colour = guide_legend(title = "Model", reverse = TRUE)) +
+  theme(legend.position = "bottom")
+
+## plot of predictions from the modified model in comparison to the original model across latitude
+
+# Holocellulose
+p1 <- 
+  d_poc_latitude_summary %>%
+  dplyr::filter(sample_type %in% c("Posterior", "Original") & variable_y == "Holocellulose") %>%
+  dplyr::mutate(model = 
+                  dplyr::case_when(
+                    sample_type == "Posterior" ~ "Modified",
+                    sample_type == "Prior" ~ "Prior",
+                    sample_type == "Original" ~ "Original"
+                  )) %>%
+  ggplot() +
+  geom_ribbon(aes(x = x_latitude, y = mu_pop_fit, 
+                  ymin = mu_pop_lwr, ymax = mu_pop_upr,
+                  fill = model), 
+              alpha = 0.3) +
+  geom_errorbar(data = d_y_yhat_long_sites %>%
+                  dplyr::filter(model != "Modified, only MIRS-based" & variable_y == "Holocellulose"), 
+                aes(y = fit_mean, x = x_latitude + ifelse(model == "Original", 0, 0.1), 
+                    ymin = fit_lwr, ymax = fit_upr),
+                colour = "grey", width = 0) +
+  geom_path(aes(x = x_latitude, y = mu_pop_fit, colour = model), size = 0.7) +
+  geom_point(data = d_y_yhat_long_sites %>%
+               dplyr::filter(model != "Modified, only MIRS-based" & variable_y == "Holocellulose"), aes(y = fit_mean, x = x_latitude + ifelse(model == "Original", 0, 0.1), colour = model)) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  scale_x_continuous(labels = function(x) round(x * x_latitude_scale + x_latitude_center, 0)) +
+  labs(x = "Latitude [°]", y = "Content [mass-%]", title = "Holocellulose") +
+  theme(legend.position = "bottom")
+
+# Klason lignin
+p2 <- 
+  d_poc_latitude_summary %>%
+  dplyr::filter(sample_type %in% c("Posterior", "Original") & variable_y == "Klason lignin") %>%
+  dplyr::mutate(model = 
+                  dplyr::case_when(
+                    sample_type == "Posterior" ~ "Modified",
+                    sample_type == "Prior" ~ "Prior",
+                    sample_type == "Original" ~ "Original"
+                  )) %>%
+  ggplot() +
+  geom_ribbon(aes(x = x_latitude, y = mu_pop_fit, 
+                  ymin = mu_pop_lwr, ymax = mu_pop_upr,
+                  fill = model), 
+              alpha = 0.3) +
+  geom_errorbar(data = d_y_yhat_long_sites %>%
+                  dplyr::filter(model != "Modified, only MIRS-based" & variable_y == "Klason lignin"), 
+                aes(y = fit_mean, x = x_latitude + ifelse(model == "Original", 0, 0.1), 
+                    ymin = fit_lwr, ymax = fit_upr),
+                colour = "grey", width = 0) +
+  geom_path(aes(x = x_latitude, y = mu_pop_fit, colour = model), size = 0.7) +
+  geom_point(data = d_y_yhat_long_sites %>%
+               dplyr::filter(model != "Modified, only MIRS-based" & variable_y == "Klason lignin"), aes(y = fit_mean, x = x_latitude + ifelse(model == "Original", 0, 0.1), colour = model)) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  scale_x_continuous(labels = function(x) round(x * x_latitude_scale + x_latitude_center, 0)) +
+  labs(x = "Latitude [°]", y = "Content [mass-%]", title = "Klason lignin") +
+  theme(legend.position = "bottom")  
+
+p_poc_latitude6 <- 
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+  
+# posterior predictive check with density plots for individual samples
+p_poc_latitude7 <- 
+  ppc_dens_overlay(y = m1.8_pred[, 1] %>%
+                     magrittr::multiply_by(100), 
+                   yrep = as.matrix(s1_res_holocellulose[, stringr::str_detect(colnames(s1_res_holocellulose), "Y1\\.")])[1:100, ] %>%
+                     magrittr::multiply_by(100)) +
+  labs(x = "Holocellulose content [mass-%]", y = "Density")
+
+p_poc_latitude8 <- 
+  ppc_dens_overlay(y = m2.8_pred[, 1] %>%
+                     magrittr::multiply_by(100), 
+                   yrep = as.matrix(s1_res_klason_lignin[, stringr::str_detect(colnames(s1_res_klason_lignin), "Y1\\.")])[1:100, ] %>%
+                     magrittr::multiply_by(100)) +
+  labs(x = "Klason lignin content [mass-%]", y = "Density")
+
+# posterior predictive check with density plots for individual cores
+p_poc_latitude10 <- 
+  ppc_dens_overlay(y = 
+                     d_peat[d_peat$sample_depth_lower <= 50, ] %>%
+                     dplyr::mutate(y = m1.8_pred[, 1]) %>%
+                     dplyr::group_by(core_label) %>%
+                     dplyr::summarise(y = mean(y), .groups = "drop") %>%
+                     dplyr::pull(y) %>%
+                     magrittr::multiply_by(100),  
+                   yrep = as.matrix(s1_res_holocellulose[, stringr::str_detect(colnames(s1_res_holocellulose), "mu_core\\.")])[1:100, ] %>%
+                     magrittr::multiply_by(100)) +
+  labs(x = "Hollocellulose content [mass-%]", y = "Density") +
+  theme(legend.position = "bottom")
+
+p_poc_latitude11 <- 
+  ppc_dens_overlay(y = 
+                     d_peat[d_peat$sample_depth_lower <= 50, ] %>%
+                     dplyr::mutate(y = m2.8_pred[, 1]) %>%
+                     dplyr::group_by(core_label) %>%
+                     dplyr::summarise(y = mean(y), .groups = "drop") %>%
+                     dplyr::pull(y) %>%
+                     magrittr::multiply_by(100), 
+                   yrep = as.matrix(s1_res_klason_lignin[, stringr::str_detect(colnames(s1_res_klason_lignin), "mu_core\\.")])[1:100, ] %>%
+                     magrittr::multiply_by(100)) +
+  labs(x = "Klason lignin content [mass-%]", y = "Density") +
+  theme(legend.position = "bottom")
+
+# plot of predicted versus fitted values
+p_y_yhat <-                  
+  d_y_yhat %>%                  
+  ggplot(mapping = aes(y = Estimate, x = fit)) +
+  geom_errorbar(aes(ymin = Q2.5, ymax = Q97.5), colour = "grey", width = 0) +
+  geom_errorbarh(aes(xmin = lwr, xmax = upr), colour = "grey", height = 0) +
+  geom_abline(intercept = 0, slope = 1, colour = "grey50") +
+  geom_point(colour = "dimgrey") +
+  facet_wrap(~ variable_y) + 
+  scale_x_continuous(labels = function(x) x * 100) +
+  scale_y_continuous(labels = function(x) x * 100) +
+  coord_fixed() +
+  labs(x = "Modified", y = "Modified, only MIRS-based")
+```
+
+# Criticizing our models for the latitudinal gradient
+
+In spite of our suggested improvements, our model is far from perfect to describe the data. One issue is that there were `r hklmirs::format_numbers(sum(rstan::get_divergent_iterations(s1_fit_holocellulose)), capitalized = FALSE)` divergent `r ifelse(sum(rstan::get_divergent_iterations(s1_fit_holocellulose)) == 1, "transition", "transitions")` for the model for holocellulose which probably could be avoided by using tighter priors. Another issue is that the models for the latitudinal gradient provide only little information on the variability in average surface peat contents and on the variability of individual samples. For holocellulose, it is visible that the large uncertainty in predictions and average contents of cores (near-surface) results in strong shrinkage to the populations' average (figure \@ref(fig:reply-res-p-latitude-poc-shrinkage)). For Klason lignin, the distribution of individual samples' contents is modeled quite accurately relative to the only-MIRS-based reference model, but there is also strong shrinkage on the level of average core contents (figure \@ref(fig:reply-res-p-latitude-poc-shrinkage) (c)).  
+
+Shrinkage is generally an advantage of Bayesian hierarchical models because it improves the predictive performance of models [e.g. @Park.2004; @Lemoine.2019]. The amount of shrinkage here is not surprising because the predicted contents of individual samples come with large uncertainties and therefore relative large shrinkage does not contradict the distributions estimated for individual samples' contents. However, in this case, shrinkage is in our opinion also an indication for underfitting.  Underfitting occurs because the latitudinal gradient describes only a small proportion of the variability in peat surface holocellulose contents. The reason is that latitude is no causal factor and that known causal factors which control vegetation and decomposition can be quite diverse on regional to local scales (figure \@ref(fig:reply-res-p-latitude-poc-shrinkage)). Our analysis therefore shows that we need models which explain how these known causal factors control peat holocellulose and Klason lignin contents to accurately describe their patterns on larger spatial scales.
+
+(ref:reply-res-p-latitude-poc-caption) Posterior predictive checks for the modified models describing the latitudinal gradient of peat core average near-surface holocellulose and Klason lignin contents. The individual plots show the same as figure \@ref(fig:reply-res-p-latitude-ppc), but now additionally with the draws from the posterior distribution for the models.
+
+```{r reply-res-p-latitude-poc, echo=FALSE, out.width="70%", fig.height=5.5, fig.width=6.5, fig.cap='(ref:reply-res-p-latitude-poc-caption)'}
+p_poc_latitude1 + p_poc_latitude2 + p_poc_latitude4 + p_poc_latitude3 +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+```
+
+(ref:reply-res-p-latitude-poc-slope-caption) Marginal prior and posterior distribution for the slopes for the latitudinal gradient.
+
+```{r reply-res-p-latitude-poc-slope, echo=FALSE, out.width="70%", fig.height=3.5, fig.width=3.5, fig.cap='(ref:reply-res-p-latitude-poc-slope-caption)'}
+p_poc_latitude5
+```
+
+(ref:reply-res-p-latitude-poc-shrinkage-caption) Shrinkage effects of the modified models describing the latitudinal gradient ("Modified") in comparison to the modified models using the MIRS only ("Modified, only MIRS-based"). (a) Predictions of the models for individual near-surface peat samples for all collected peat cores. As comparison, also the predictions of the original model (the Bayesian formulation of the models to predict holocellulose and Klason lignin contents of @Hodgkins.2018; "Original") are displayed. Points are average predictions and error bars 95 % prediction intervals. For holocellulose, shrinkage effects are visible both for the variability within cores and the variability across cores. (b, c) Posterior predictive densities of 100 random draws of average peat core near-surface contents ($y_{rep}$) in comparison to the average contents of the peat samples predicted with the modified model using only the MIRS ($y$). Due to shrinkage, all models produce a higher density of average peat core near-surface samples with average holocellulose and Klason lignin contents. (d) Plot of individual near-surface peat sample contents predicted by the modified models using the MIRS only versus the contents predicted by the modified models describing the latitudinal gradients. Points are average predictions and error bars 95 % prediction intervals. For holocellulose, shrinkage effects for samples with larger contents are visible.
+
+```{r reply-res-p-latitude-poc-shrinkage, echo=FALSE, out.width="70%", fig.height=8.6, fig.width=6.5, fig.cap='(ref:reply-res-p-latitude-poc-shrinkage-caption)'}
+p1 <- 
+  p_poc_latitude_6_1 +
+  plot_layout(guides = 'collect') &
+  theme(legend.position = "bottom", legend.box="vertical")
+
+p2 <- 
+  (p_poc_latitude10 + p_poc_latitude11) +
+  plot_layout(guides = 'collect') &
+  theme(legend.position = "bottom", legend.box="vertical")
+
+p3 <-
+  p_y_yhat +
+  plot_layout(guides = 'collect') &
+  theme(legend.position = "bottom", legend.box="vertical")
+
+p1 /p2 /p3 +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") + 
+  plot_layout(heights = c(2.5, 1, 1.7))
+```
+
+
+
+```{r m-reply-predictions, include=FALSE}
+### aim: collect samples from the posterior distribution of the original and improved model for peat and vegetation samples such that key figures from Hodgkins.2018 can be reproduced
+
+## peat data
+
+# predictions
+d_peat_pred_best <- 
+  dplyr::bind_rows(
+    # holocellulose
+    m1.8 %>%
+      rstanarm::posterior_predict(newdata = d_peat_bin20) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), names_to = "sample_id", values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_peat)) %>% rep(each = nrow(d_peat)),
+        sample_id = d_peat$sample_id %>% rep(length(unique(iter))),
+        model = "Best binned spectra",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), names_to = "sample_id", values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_peat)) %>% rep(each = nrow(d_peat)),
+        sample_id = d_peat$sample_id %>% rep(length(unique(iter))),
+        model = "Original",
+        variable_y = "Holocellulose"
+      ),
+    # klason lginin
+    m2.8 %>%
+      rstanarm::posterior_predict(newdata = d_peat_bin20) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), names_to = "sample_id", values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_peat)) %>% rep(each = nrow(d_peat)),
+        sample_id = d_peat$sample_id %>% rep(length(unique(iter))),
+        model = "Best binned spectra",
+        variable_y = "Klason lignin"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_peat_res) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), names_to = "sample_id", values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_peat)) %>% rep(each = nrow(d_peat)),
+        sample_id = d_peat$sample_id %>% rep(length(unique(iter))),
+        model = "Original",
+        variable_y = "Klason lignin"
+      )
+  ) %>%
+  dplyr::left_join(d_peat %>% dplyr::select(-spectra), by = "sample_id") %>%
+  dplyr::filter(iter <= 2000)
+
+## summarize across depth values to reproduce key plots in Hodgkins et al. 2018
+#d_peat_pred_best_summary <-
+#  d_peat_pred_best %>%
+#  dplyr::filter(sample_depth_lower <= 50) %>%
+#  dplyr::group_by(variable_y, model, core_label) %>%
+#  dplyr::summarise(fit = mean(y_hat),
+#                   lwr = quantile(y_hat, probs = 0.05),
+#                   upr = quantile(y_hat, probs = 0.95),
+#                   sampling_latitude = mean(sampling_latitude),
+#                   .groups = "drop") %>%
+#  dplyr::mutate(
+#    sampling_latitude = dplyr::case_when(model != "Original" ~ sampling_latitude + 3,
+#                                         TRUE ~ sampling_latitude)
+#    )
+
+#d_peat_pred_best_summary1 <-
+#  d_peat_pred_best %>%
+#  dplyr::group_by(variable_y, model, core_label, sample_id) %>%
+#  dplyr::summarise(fit = mean(y_hat),
+#                   lwr = quantile(y_hat, probs = 0.05),
+#                   upr = quantile(y_hat, probs = 0.95),
+#                   sample_depth_lower = mean(sample_depth_lower),
+#                   sampling_latitude = mean(sampling_latitude),
+#                   .groups = "drop")
+
+## compute average and prediction intervals for latitude surface peat contents linear model
+#x_seq <- seq(min(d_peat_pred_best$sampling_latitude, na.rm = TRUE), max(d_peat_pred_best$sampling_latitude, na.rm = TRUE), by = 1)
+#d_peat_pred_best_latitude <-
+#  d_peat_pred_best %>%
+#  dplyr::filter(iter <= 1000 & sample_depth_lower <= 50) %>%
+#  dplyr::group_by(variable_y, model, iter, core_label) %>%
+#  dplyr::summarise(y_hat = mean(y_hat),
+#                   sampling_latitude = mean(sampling_latitude),
+#                   .groups = "drop_last") %>%
+#  dplyr::summarise(
+#    lm_fit = {
+#      m <- lm(y_hat ~ sampling_latitude, 
+#                 data=tibble::tibble(y_hat = y_hat, sampling_latitude = sampling_latitude))
+#      res <- predict(m, newdata = data.frame(sampling_latitude = x_seq), interval = "confidence", level = 0.95)
+#      tibble::tibble(y_hat = res[, 1],
+#                     lwr = res[, 2],
+#                     upr = res[, 3],
+#                     sampling_latitude = x_seq) %>% list()
+#      }
+#  ) %>%
+#  tidyr::unnest(cols = dplyr::contains("lm_fit")) %>%
+#  dplyr::group_by(variable_y, model, sampling_latitude) %>%
+#  dplyr::summarise(fit = mean(y_hat),
+#                   lwr = quantile(lwr, 0.025, na.rm = TRUE),
+#                   upr = quantile(upr, 0.975, na.rm = TRUE),
+#                   .groups = "drop")
+
+#d_peat_pred_best_latitude_slopes <-
+#  d_peat_pred_best %>%
+#  dplyr::filter(iter <= 1000 & sample_depth_lower <= 50) %>%
+#  dplyr::group_by(variable_y, model, iter, core_label) %>%
+#  dplyr::summarise(y_hat = mean(y_hat),
+#                   sampling_latitude = mean(sampling_latitude),
+#                   .groups = "drop_last") %>%
+#  dplyr::summarise(
+#    lm_fit = {
+#      m <- lm(y_hat ~ sampling_latitude, 
+#                 data=tibble::tibble(y_hat = y_hat, sampling_latitude = sampling_latitude))
+#      m <- summary(m)
+#      tibble::tibble(intercept = coef(m)[1, 1],
+#                     slope = coef(m)[2, 1],
+#                     slope_p = coef(m)[2, 4]) %>% list()
+#      }
+#  ) %>%
+#  tidyr::unnest(cols = dplyr::contains("lm_fit")) %>%
+#  dplyr::group_by(variable_y, model) %>%
+#  dplyr::summarise(intercept_mean = mean(intercept),
+#                   slope_mean = mean(slope),
+#                   slope_lwr = quantile(slope, 0.025, na.rm = TRUE),
+#                   slope_upr = quantile(slope, 0.975, na.rm = TRUE),
+#                   slope_p_mean = mean(slope_p),
+#                   slope_p_lwr = quantile(slope_p, 0.025, na.rm = TRUE),
+#                   slope_p_upr = quantile(slope_p, 0.975, na.rm = TRUE),
+#                   .groups = "drop")
+
+# compute average and prediction intervals for latitude depth profile LOESS smoother
+x_seq <- seq(min(d_peat_pred_best$sample_depth_lower, na.rm = TRUE), max(d_peat_pred_best$sample_depth_lower, na.rm = TRUE), by = 5)
+d_peat_pred_best_latitude_depth <-
+  d_peat_pred_best %>%
+  dplyr::filter(iter <= 1000) %>%
+  dplyr::mutate(latitude_class = sampling_latitude > 45) %>%
+  dplyr::group_by(variable_y, model, iter, latitude_class) %>%
+  dplyr::summarise(
+    loess_fit = {
+      m <- loess(y_hat ~ sample_depth_lower, 
+                 data=tibble::tibble(y_hat = y_hat, sample_depth_lower = sample_depth_lower),
+                 span = 0.75, degree = 2, family = "gaussian", method = "loess", model = FALSE)
+            res <- predict(m, newdata = data.frame(sample_depth_lower = x_seq), se = FALSE)
+      tibble::tibble(y_hat = res,
+                     sample_depth_lower = x_seq) %>% list()
+      }
+  ) %>%
+  tidyr::unnest(cols = dplyr::contains("loess_fit")) %>%
+  dplyr::group_by(variable_y, model, latitude_class, sample_depth_lower) %>%
+  dplyr::summarise(fit = mean(y_hat),
+                   lwr = quantile(y_hat, 0.025, na.rm = TRUE),
+                   upr = quantile(y_hat, 0.975, na.rm = TRUE),
+                   .groups = "drop")
+
+# compute average differences in prediction between the models
+d_peat_pred_best_diff <-
+  d_peat_pred_best %>%
+  dplyr::filter(model == "Best binned spectra" & iter <= 1000) %>%
+  dplyr::select(variable_y, model, iter, sampling_latitude, sample_depth_lower, y_hat) %>%
+  dplyr::mutate(y_hat_or = 
+                  d_peat_pred_best %>% 
+                  dplyr::filter(model == "Original" & iter <= 1000) %>%
+                  dplyr::pull(y_hat),
+                high_latitude = sampling_latitude > 45,
+                surface_peat = sample_depth_lower <= 50,
+                y_hat_diff = y_hat - y_hat_or)
+
+d_peat_pred_best_diff_mean <-
+  d_peat_pred_best_diff %>%
+  dplyr::group_by(variable_y, model, iter, high_latitude, surface_peat) %>%
+  dplyr::summarise(y_hat_diff = mean(y_hat_diff),
+                   y_hat = mean(y_hat),
+                   y_hat_or = mean(y_hat_or),
+                   .groups = "drop")
+
+d_peat_pred_best_diff_mean1 <-
+  d_peat_pred_best_diff %>%
+  dplyr::group_by(variable_y, model, iter, high_latitude, surface_peat) %>%
+  dplyr::summarise(y_hat = mean(y_hat),
+                   y_hat_or = mean(y_hat_or),
+                   .groups = "drop") %>%
+  dplyr::group_by(variable_y, model, iter, high_latitude) %>%
+  dplyr::summarise(y_hat_diff = abs(y_hat[surface_peat] - y_hat[!surface_peat]),
+                   y_hat_or_diff = abs(y_hat_or[surface_peat] - y_hat_or[!surface_peat]),
+                   .groups = "drop")
+```
+
+```{r m-reply-predictions-veg, include=FALSE, eval=FALSE}
+## vegetation data
+
+# bin width: 20
+d_veg_bin20_flat <-
+  d_veg %>%
+  ir::ir_bin(width = 50) %>%
+  ir::ir_flatten()
+
+d_veg_bin20 <- 
+  d_veg_bin20_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = d_peat_bin20_scale$center, 
+        scale = d_peat_bin20_scale$scale) %>%
+  as.data.frame()
+
+# bin width: 10
+d_veg_bin10_flat <-
+  d_veg %>%
+  ir::ir_bin(width = 10) %>%
+  ir::ir_flatten()
+
+d_veg_bin10 <- 
+  d_veg_bin10_flat %>%
+  dplyr::select(-1) %>%
+  t() %>%
+  as.data.frame() %>%
+  scale(center = d_peat_bin10_scale$center, 
+        scale = d_peat_bin10_scale$scale) %>%
+  as.data.frame()
+
+# predictions
+d_veg_pred_best <- 
+  dplyr::bind_rows(
+    m1.8 %>%
+      rstanarm::posterior_predict(newdata = d_veg_bin20) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), 
+                          names_to = "sample_id", 
+                          values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_veg)) %>% rep(each = nrow(d_veg)),
+        sample_id = d_veg$sample_id %>% rep(length(unique(iter))),
+        model = "Best binned spectra",
+        variable_y = "Holocellulose"
+      ),
+    m1.2 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), 
+                          names_to = "sample_id", 
+                          values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_veg)) %>% rep(each = nrow(d_veg)),
+        sample_id = d_veg$sample_id %>% rep(length(unique(iter))),
+        model = "Original",
+        variable_y = "Holocellulose"
+      ),
+    m2.8 %>%
+      rstanarm::posterior_predict(newdata = d_veg_bin10) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), 
+                          names_to = "sample_id", 
+                          values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_veg)) %>% rep(each = nrow(d_veg)),
+        sample_id = d_veg$sample_id %>% rep(length(unique(iter))),
+        model = "Best binned spectra",
+        variable_y = "Klason lignin"
+      ),
+    m2.2 %>%
+      rstanarm::posterior_predict(newdata = d_veg_res) %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(cols = dplyr::everything(), 
+                          names_to = "sample_id", 
+                          values_to = "y_hat") %>%
+      dplyr::mutate(
+        iter = seq_len(length(y_hat)/nrow(d_veg)) %>% rep(each = nrow(d_veg)),
+        sample_id = d_veg$sample_id %>% rep(length(unique(iter))),
+        model = "Original",
+        variable_y = "Klason lignin"
+      ),
+  ) %>%
+  dplyr::left_join(d_veg %>% dplyr::select(-spectra), by = "sample_id") %>%
+  dplyr::filter(iter <= 2000)
+
+# classify sites so that they match the site-vegetation classification in Hodgkins et al. 2018
+d_peat_pred_best <-
+  d_peat_pred_best %>%
+  dplyr::left_join(
+    tibble::tibble(
+      core_label = unique(d_peat_pred_best$core_label),
+      barchart_label = c("Boreal fens", "Stordalen", "NC Pocosin", "NC Pocosin", "Loxahatchee", "Loxahatchee", "Boreal bogs", "Boreal bogs", "Mendaram", "Mendaram", "Boreal bogs", "Boreal fens", "Boreal bogs", "Boreal bogs")
+    ),
+    by = "core_label"
+  )
+
+d_veg_pred_best <-
+  d_veg_pred_best %>% 
+  dplyr::left_join(
+    tibble::tibble(
+      site_name = unique(d_veg_pred_best$site_name),
+      barchart_label = c("Stordalen", "Boreal bogs", "Boreal fens", "NC Pocosin", "Loxahatchee", "Mendaram", "Mendaram")
+    ),
+    by = "site_name"
+  )
+
+# compute average values per site
+d_peat_pred_best_turnover_summary <-
+  d_peat_pred_best %>%
+  dplyr::filter(sample_depth_lower <= 50) %>%
+  dplyr::group_by(variable_y, model, barchart_label, iter) %>%
+  dplyr::summarise(y_hat = mean(y_hat),
+                   .groups = "drop") %>%
+  dplyr::arrange(barchart_label, iter)
+
+d_veg_pred_best_turnover_summary <-
+  d_veg_pred_best %>%
+  dplyr::group_by(variable_y, model, barchart_label, iter) %>%
+  dplyr::summarise(y_hat = mean(y_hat),
+                   .groups = "drop") %>%
+  dplyr::arrange(barchart_label, iter)
+
+d_turnover <-
+  d_peat_pred_best_turnover_summary %>%
+  dplyr::mutate(
+    Peat = y_hat,
+    Vegetation = d_veg_pred_best_turnover_summary$y_hat,
+    Difference = Peat - Vegetation
+  ) %>%
+  dplyr::mutate(barchart_label = factor(barchart_label, levels = c("Stordalen", "Boreal bogs", "Boreal fens", "NC Pocosin", "Loxahatchee", "Mendaram") %>% rev())) %>%
+  tidyr::pivot_longer(cols = dplyr::one_of(c("Peat", "Vegetation", "Difference")),
+                      names_to = "sample_type",
+                      values_to = "values") %>%
+  dplyr::group_by(variable_y, model, barchart_label, sample_type) %>%
+  dplyr::summarise(.groups = "drop",
+                   fit = median(values) * 100,
+                   lwr = quantile(values, prob = 0.025) * 100,
+                   upr = quantile(values, prob = 0.975) * 100)
+```
+
+
+```{r m-reply-p-sites-latitude, include=FALSE, eval = FALSE}
+### Reproduce plots in Hodgkins et al. 2018
+
+## contents vs latitude across sites
+p1 <-
+  d_peat_pred_best_latitude %>%
+  dplyr::filter(variable_y == "Holocellulose") %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  ggplot(aes(y = fit * 100, ymin = lwr * 100, ymax = upr * 100,
+             x = sampling_latitude, 
+             colour = model, 
+             fill = model)) +
+  geom_path() +
+  geom_ribbon(alpha = 0.2, colour = NA) +
+  geom_errorbar(data = 
+                  d_peat_pred_best_summary %>%
+                  dplyr::filter(variable_y == "Holocellulose")  %>%
+                  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+                  dplyr::mutate(sampling_latitude = ifelse(model == "Original", sampling_latitude, sampling_latitude + 2)),
+                aes(y = fit * 100, ymin = lwr * 100, ymax = upr * 100, 
+                    x = sampling_latitude, 
+                    colour = model)) +
+  geom_point(data = 
+               d_peat_pred_best_summary %>%
+               dplyr::filter(variable_y == "Holocellulose") %>%
+               dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+               dplyr::mutate(sampling_latitude = ifelse(model == "Original", sampling_latitude, sampling_latitude + 2)),
+             aes(y = fit * 100, x = sampling_latitude, colour = model)) +
+  
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"[mass-%]"),
+       x = expression("Latitude ["*degree*N*"]")) +
+  guides(colour = guide_legend(title = "Model"),
+         fill = guide_legend(title = "Model"))
+
+p2 <-
+  d_peat_pred_best_latitude %>%
+  dplyr::filter(variable_y == "Klason lignin") %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  ggplot(aes(y = fit * 100, ymin = lwr * 100, ymax = upr * 100,
+             x = sampling_latitude, 
+             colour = model, 
+             fill = model)) +
+  geom_path() +
+  geom_ribbon(alpha = 0.2, colour = NA) +
+  geom_errorbar(data = 
+                  d_peat_pred_best_summary %>%
+                  dplyr::filter(variable_y == "Klason lignin") %>%
+                  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+                  dplyr::mutate(sampling_latitude = ifelse(model == "Original", sampling_latitude, sampling_latitude + 2)),
+                aes(y = fit * 100, ymin = lwr * 100, ymax = upr * 100, 
+                    x = sampling_latitude, 
+                    colour = model)) +
+  geom_point(data = 
+               d_peat_pred_best_summary %>%
+               dplyr::filter(variable_y == "Klason lignin") %>%
+               dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+               dplyr::mutate(sampling_latitude = ifelse(model == "Original", sampling_latitude, sampling_latitude + 2)),
+             aes(y = fit * 100, x = sampling_latitude, colour = model)) +
+  
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~content~"[mass-%]"),
+       x = expression("Latitude ["*degree*N*"]")) +
+  guides(colour = guide_legend(title = "Model"),
+         fill = guide_legend(title = "Model"))
+
+# combine
+p_sites_latitude <- 
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+```{r m-reply-p-depth-profiles-latitude, include=FALSE}
+## plots of average depth profiles for two classes of latitudes
+
+p1 <-
+  d_peat_pred_best_latitude_depth %>%
+  dplyr::filter(variable_y == "Holocellulose") %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  dplyr::arrange(sample_depth_lower) %>%
+  ggplot(aes(y = fit, 
+             ymin = lwr,
+             ymax = upr,
+             x = sample_depth_lower, 
+             colour = latitude_class, 
+             fill = latitude_class)) +
+  geom_hline(yintercept = c(0.11, 0.16, 0.21, 0.37), colour = "grey", linetype = 2) +
+  geom_path() +
+  geom_ribbon(alpha = 0.2, colour = NA) +
+  coord_flip() +
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"[mass-%]"),
+       x = "Lower layer boundary depth [cm]") +
+  facet_wrap(~ model, 
+             scales = "free_y", 
+             ncol = 1) +
+  scale_x_reverse() +
+  scale_y_continuous(labels = function(x) x * 100) +
+  guides(colour = guide_legend(title = expression(Latitude>45~degree*N)),
+         fill = guide_legend(title = expression(Latitude>45~degree*N)))
+
+p2 <-
+  d_peat_pred_best_latitude_depth %>%
+  dplyr::filter(variable_y == "Klason lignin") %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  dplyr::arrange(sample_depth_lower) %>%
+  ggplot(aes(y = fit, 
+             ymin = lwr,
+             ymax = upr,
+             x = sample_depth_lower, 
+             colour = latitude_class, 
+             fill = latitude_class)) +
+  geom_hline(yintercept = c(0.22, 0.32, 0.35, 0.48), colour = "grey", linetype = 2) +
+  geom_path() +
+  geom_ribbon(alpha = 0.2, colour = NA) +
+  coord_flip() +
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~content~"[mass-%]"),
+       x = "Lower layer boundary depth [cm]") +
+  facet_wrap(~ model, 
+             scales = "free_y", 
+             ncol = 1) +
+  scale_x_reverse() + 
+  scale_y_continuous(labels = function(x) x * 100) +
+  guides(colour = guide_legend(title = expression(Latitude>45~degree*N)),
+         fill = guide_legend(title = expression(Latitude>45~degree*N)))
+
+# combine
+p_depth_profiles_latitude <- 
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+```{r m-reply-p-veg-peat-difference, eval=FALSE, include=FALSE}
+## plots of difference between vegetation and surface peat contents
+p1 <-
+  d_turnover %>%
+  dplyr::filter(variable_y == "Holocellulose") %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  ggplot(aes(y = fit, ymin = lwr, ymax = upr,
+             x = barchart_label,
+             fill = sample_type)) +
+  geom_errorbar(colour = "grey", width = 0.2, position = position_dodge(.9)) +
+  geom_hline(yintercept = c(-0.2, 0, 0.2, 0.4) * 100, colour = "grey", linetype = 2) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Holocellulose", 
+       y = expression(Holocellulose~content~"[mass-%]"),
+       x = "Site category") +
+  facet_wrap(~ model) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_grey()
+
+p2 <-
+  d_turnover %>%
+  dplyr::filter(variable_y == "Klason lignin") %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  ggplot(aes(y = fit, ymin = lwr, ymax = upr,
+             x = barchart_label,
+             fill = sample_type)) +
+  geom_hline(yintercept = c(-0.2, 0, 0.2, 0.4) * 100, colour = "grey", linetype = 2) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(colour = "grey", width = 0.2, position = position_dodge(.9)) +
+  coord_flip() +
+  labs(title = "Klason lignin", 
+       y = expression(Klason~lignin~"[mass-%]"),
+       x = "Site category") +
+  facet_wrap(~ model) +
+  guides(fill = guide_legend(title = "")) +
+  scale_fill_grey()
+
+# combine plots
+p_veg_peat_difference <-
+  p1 + p2 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+```{r reply-2, echo=FALSE, include=FALSE, eval = TRUE, cache = FALSE}
+rmarkdown::render("002-reply-main.Rmd", clean = FALSE)
+```
