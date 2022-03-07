@@ -83,7 +83,7 @@ p_veg_peat_difference
 
 # Acknowledgements {.unnumbered}
 
-We like to thank Jeffrey Chanton and Suzanne Hodgkins for a constructive dicussion which greatly helped to improve a first version of this manuscript. 
+We like to thank Jeffrey Chanton and Suzanne Hodgkins for a constructive dicussion which greatly helped to improve a first version of this manuscript. This study was funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) grant no. KN 929/23-1 to Klaus-Holger Knorr and grant no. PE 1632/18-1 to Edzer Pebesma.
 
 # Competing interests {.unnumbered} 
 

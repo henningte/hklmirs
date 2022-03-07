@@ -2,6 +2,7 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 [![DOI](https://zenodo.org/badge/465653387.svg)](https://zenodo.org/badge/latestdoi/465653387)
+\[![Last-changedate](https://img.shields.io/badge/last%20change-2022--03--07-brightgreen.svg)\]
 
 # hklmirs
 
@@ -24,7 +25,7 @@ Please cite this compendium as:
 > and data for “Improving Models to Predict Holocellulose and Klason
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
 > Spectra” and “Predicting Absolute Holocellulose and Klason Lignin
-> Contents for Peat Remains Challenging”*. Accessed 03 Mar 2022. Online
+> Contents for Peat Remains Challenging”*. Accessed 07 Mar 2022. Online
 > at <https://doi.org/10.5281/zenodo.6325760>
 
 ## Contents
@@ -184,6 +185,13 @@ We welcome contributions from everyone. Before you get started, please
 see our [contributor guidelines](CONTRIBUTING.md). Please note that this
 project is released with a [Contributor Code of Conduct](CONDUCT.md). By
 participating in this project you agree to abide by its terms.
+
+### Funding
+
+This study was funded by the Deutsche Forschungsgemeinschaft (DFG,
+German Research Foundation) grant no. KN 929/23-1 to Klaus-Holger Knorr
+and grant no. PE 1632/18-1 to Edzer Pebesma. We acknowledge support from
+the Open Access Publication Fund of the University of Münster.
 
 ### References
 
