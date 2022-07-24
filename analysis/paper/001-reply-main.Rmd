@@ -200,11 +200,11 @@ $$
 \begin{aligned}
 \text{Y}_1[i] &\sim \text{beta}(\mu_{1}[i] \phi, (1-\mu_{1}[i])\phi)\\
 Y_{2}[j] &\sim \text{beta}(\mu_{2}[j] \phi, (1-\mu_{2}[j])\phi)\\
-\mu_{1} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}\right)\\
-\mu_{2} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}_1\right)\\
+\mu_{1} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}_1\right)\\
+\mu_{2} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}_2\right)\\
 \alpha &\sim \text{normal(0, 0.2)}\\
 \beta &\sim \text{horseshoe}(zb, hs_{local}, hs_{global}, hs_{scale\_slab}^2 \cdot hs_{slab})\\
-\phi &\sim \text{beta}(`r s1_data_holocellulose$phi_a`, `r s1_data_holocellulose$phi_b/s1_data_holocellulose$phi_scale`)\\
+\phi &\sim \text{gamma}(`r s1_data_holocellulose$phi_a`, `r s1_data_holocellulose$phi_b/s1_data_holocellulose$phi_scale`)\\
 Y_{2}[j] &\sim \text{beta}(\mu_{\text{core}}[\text{index\_core}[j]] \phi_{\text{core}}[\text{index\_core}[j]], (1-\mu_{\text{core}}[\text{index\_core}[j]])\phi_{\text{core}}[\text{index\_core}[j]])\\
 \mu_{\text{core}}[k] &\sim \text{beta}(\mu_{\text{pop}}[k] \phi_{\text{pop}}, (1-\mu_{\text{pop}}[k])\phi_{\text{pop}})\\
 \mu_{\text{pop}}[k] &= \text{logit}^{-1}\left(\alpha_{\text{latitude}} + \beta_{\text{latitude}}\text{x}_{\text{latitude}}[k]\right)\\
@@ -215,9 +215,29 @@ Y_{2}[j] &\sim \text{beta}(\mu_{\text{core}}[\text{index\_core}[j]] \phi_{\text{
 \end{aligned}
 $$
 
-Where $\text{Y}_1$ are the measured holocellulose contents of the training data; $\mu_{1}$ are the respective mean values modeled with the MIRS, only; $i$ is an index for each sample of the training data; $Y_{2}$ are the estimated peat holocellulose contents modeled simultaneously from the MIRS ($\mu_{2}$) and from the average average near-surface peat holocellulose contents per core ($\mu_{\text{core}}$); $j$ is an index for each sample in the peat data; $\text{index\_core}$ is a vector assigning each sample in the peat data to the respective core index; $k$ is an index for each unique core in the peat data. The average average near-surface peat holocellulose contents per core ($\mu_{\text{core}}$) are in turn modeled in dependency on the latitude.
+All variables and parameters with subscript "1" refer to the training data for the MIRS prediction model (diverse organic matter samples, including leave, wood, and paper products): 
 
-The full model for Klason lignin is:
+- $\text{Y}_1$ are the measured holocellulose contents of the training data.
+- $\mu_{1}$ are the respective average values modeled with MIRS.
+- $\text{X}_1$ is a matrix containing the MIRS variables (variables in columns and samples in rows) for the training data. 
+- $i$ is an index for each sample of the training data.
+- $\phi$ is the precision parameter for the Beta distribution with which values of $\text{Y}_1$ are modeled.
+- $\alpha$ and $\beta$ are intercept and regression coefficients for the MIRS prediction model. The $\beta$s are modeled via a regularized horseshoe prior parameterized following @Piironen.2017b as described in @Teickner.2022a. 
+
+All variables and parameters with subscript "2" refer to the peat samples on which the MIRS prediciton model is applied to describe the latitudinal gradient:
+
+- $Y_{2}$ are the estimated peat holocellulose contents modeled simultaneously from the MIRS (via $\mu_{2}$ --- this is the same model as for $\mu_{1}$) and from the average average near-surface peat holocellulose contents per core ($\mu_{\text{core}}$). 
+- $\text{X}_2$ is a matrix containing the MIRS variables (variables in columns and samples in rows) for the peat samples. 
+- $\mu_{\text{core}}$ are average average near-surface peat holocellulose contents per core and is assumed to follow a Beta distribution which average value is modeled in dependency of latitude.
+- $\mu_{\text{pop}}$ are average near-surface peat holocellulose contents computed for each latitude.
+- $j$ is an index for each sample in the peat data. 
+- $\text{index\_core}$ is a vector assigning each sample in the peat data to the respective core index. 
+- $k$ is an index for each unique core in the peat data. 
+- $\alpha_{\text{latitude}}$ and $\beta_{\text{latitude}}$ are intercept and regression coefficient of the linear model with which the latitudinal gradient in average near-surface peat holocellulose contents are described.
+- $x_{\text{latitude}}[k]$ is the latitude for core $k$.
+- $\phi_{\text{pop}}$ and $\phi_{\text{core}}$ are precision parameters for the gamma distributions for the average core near surface average holocellulose content and the core near surface average holocellulose contents, respectively.
+
+The full model for Klason lignin is analogous to that for holocellulose:
 
 $$
 \begin{aligned}
@@ -227,7 +247,7 @@ Y_{2}[j] &\sim \text{beta}(\mu_{2}[j] \phi, (1-\mu_{2}[j])\phi)\\
 \mu_{2} &= \text{logit}^{-1}\left(\alpha + \beta \text{X}_1\right)\\
 \alpha &\sim \text{normal(0, 0.2)}\\
 \beta &\sim \text{horseshoe}(zb, hs_{local}, hs_{global}, hs_{scale\_slab}^2 \cdot hs_{slab})\\
-\phi &\sim \text{beta}(`r s1_data_klason_lignin$phi_a`, `r s1_data_klason_lignin$phi_b/s1_data_klason_lignin$phi_scale`)\\
+\phi &\sim \text{gamma}(`r s1_data_klason_lignin$phi_a`, `r s1_data_klason_lignin$phi_b/s1_data_klason_lignin$phi_scale`)\\
 Y_{2}[j] &\sim \text{beta}(\mu_{\text{core}}[\text{index\_core}[j]] \phi_{\text{core}}[\text{index\_core}[j]], (1-\mu_{\text{core}}[\text{index\_core}[j]])\phi_{\text{core}}[\text{index\_core}[j]])\\
 \mu_{\text{core}}[k] &\sim \text{beta}(\mu_{\text{pop}}[k] \phi_{\text{pop}}, (1-\mu_{\text{pop}}[k])\phi_{\text{pop}})\\
 \mu_{\text{pop}}[k] &= \text{logit}^{-1}\left(\alpha_{\text{latitude}} + \beta_{\text{latitude}}\text{x}_{\text{latitude}}[k]\right)\\
