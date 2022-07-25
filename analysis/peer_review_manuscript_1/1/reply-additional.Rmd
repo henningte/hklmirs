@@ -1,0 +1,53 @@
+## Additional changes
+
+We made the following additional changes:
+
+1. old: l. 4; new: l. 4: We changed the sentence "The models may have the potential to understand large-scale SOM gradients and have been used in various studies." to "The models may help to understand large-scale SOM gradients and have been used in various studies."
+
+2. old: l. 40; new: l. 42: We changed "comprises" to "comprise".
+
+4. old: l. 47; new: l. 49: We replaced "the authors" by "@Hodgkins.2018".
+
+5. old: l. 49; new: l. 51: We replaced "... and divided by ..." by "..., and normalized --- divided by ..." to introduce the term "normalization" which is used later in the text and also in @Hodgkins.2018.
+
+6. old: l. 52; new: l. 55: We replaced "data is" by "data are".
+
+7. old: l. 65 to 66; new: l. 68: We removed "due the central limit theorem" because this applies only to mean values. However, we would see the application of a normal distribution only as practically justified when predictions for individual samples would not generate unrealistic values and prediction intervals.
+
+8. old: l. 91; new: l. 96: We changed "models computed" to "computed models".
+
+9. old: l. 151; new: l. 160: We replaced "data is" by "data are".
+
+10. old: l. 168; new: l. 178: We changed "[@Teickner.2022]" to a textual citation.
+
+11. old: l. 203; new: l. 220: We changed "represent" to "form".
+
+12. old: l. 218; new: l. 235: We changed "We therefore created such plots" to "We therefore plotted measured values against predicted values".
+
+14. old: l. 294; new: l. 316: We changed "samples --- and" to "samples and ---".
+
+15. old: l. 307; new: l. 329: We replaced "data is" by "data are".
+
+16. old: l. 328; new: l. 350: We replaced "data is" by "data are".
+
+17. old: l. 352; new: l. 374: We removed "middle row in" as the described pattern is visible in rows 2 to 4 of the figure.
+
+18. old: l. 414; new: l. 437: We changed "the holocellulose content" to "holocellulose contents".
+
+19. old: l. 423 to 425; new: l. 444 to 448: We replaced "Most importantly, due to spectral normalization, predictions can even be sensitive to variables not included in the model. Therefore, to assess if training data (the prediction domain) is representative, whole spectra have to be compared." by "Most importantly, due to spectral normalization, predictions can be sensitive _even_ to variables not included in the model. Therefore, to assess if training data (the prediction domain) _are_ representative, whole spectra have to be compared." (changes emphasized). Additionally, we replaced "data is" by "data are" in the previous sentence.
+
+20. old: l. 430; new: l. 453: We replaced "for" by "to".
+
+21. old: l. 444; new: l. 468: We changed "We assume the binning and estimation procedure is relatively robust ..." to "We assume that the binning and estimation procedure are relatively robust ..."
+
+22. old: l. 446; new: l. 471: We changed "if this holds in general" to "whether this is possible in general".
+
+24. old: l. 456 to 457; new: l. 488 to 490: We corrected this statement to "To support such developments, we implemented the best models using binned spectra into the R package irpeat [@Teickner.2020a]. The other models can be reproduced from the reproducible research compendium [@Teickner.2022b]."
+
+25. old: Tab. 1; new: Tab. 1: In the caption, we changed "$\Delta$ELPD the difference in ELPD relative to the best average model" to "$\Delta$ELPD the difference in ELPD relative to the average ELPD of the on average best model".
+
+26. old : Fig. S2; new: Fig. S2: In the caption, we changed "all absorbance value" to "all absorbance values".
+
+27. old : Fig. S2; new: Fig. S2: We improved the caption to make clearer what the different panels show.
+
+28. old : Fig. S2; new: Fig. S2: We improved the text above this figure make clearer what the implication of the simulation is.

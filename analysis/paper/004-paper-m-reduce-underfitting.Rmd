@@ -450,11 +450,12 @@ loo_comparison_res <-
     loo_comparison_kl %>%
       dplyr::select(dplyr::all_of(loo_comparison_res_colindex))
   ) %>%
+  dplyr::select(-original_model) %>%
   tibble::remove_rownames() %>%
   kableExtra::kable(booktabs = TRUE, 
-                    col.names = c("Model", "Original model?", "Distribution", "Predictors", "Prior scale", "Bin width", "ELPD", "$\\Delta$ELPD", "$\\Delta$SE"), 
+                    col.names = c("Model", "Distribution", "Predictors", "Prior scale", "Bin width", "ELPD", "$\\Delta$ELPD", "$\\Delta$SE"), 
                     escape = FALSE,
-                    caption = 'Overview on the relative predictive performance of the models for holocellulose and Klason lignin content as measured using PSIS-LOO ELPD. For each variable, the model with the best average predictive performance (largest ELPD) is at the top and the other models follow in descending order. Models ending in ".2" and ".3" are the models with the original model structure as developed by \\cite{Hodgkins.2018} (column "Original model?"). "Distribution" is the distribution assumed for the target variable. "Predictors" indicates if models were fitted with peaks extracted using the procedure of \\cite{Hodgkins.2018} ("peaks") or using binned spectra ("bins"). "Prior" scale indicates the standard deviation for Gaussian coefficients (numeric values), or that flat priors were assumed ("flat") or regularized horseshoe priors were used ("-"). "Bin width" is the width of bins (in wavenumber units). "ELPD" is the PSIS-LOO expected log-predictive density, $\\Delta$ELPD the difference in ELPD relative to the best average model, and $\\Delta$SE the standard error in the average $\\Delta$ELPD. \\label{tab:res-tab-loo-comparison-res}') %>%
+                    caption = 'Overview on the relative predictive performance of the models for holocellulose and Klason lignin content as measured using PSIS-LOO ELPD. For each variable, the model with the best average predictive performance (largest ELPD) is at the top and the other models follow in descending order. Models ending in ".2" and ".3" are the models with the original model structure as developed by \\cite{Hodgkins.2018}. "Distribution" is the distribution assumed for the target variable. "Predictors" indicates if models were fitted with peaks extracted using the procedure of \\cite{Hodgkins.2018} ("peaks") or using binned spectra ("bins"). "Prior" scale indicates the standard deviation for Gaussian coefficients (numeric values), or that flat priors were assumed ("flat") or regularized horseshoe priors were used ("-"). "Bin width" is the width of bins (in wavenumber units). "ELPD" is the PSIS-LOO expected log-predictive density, $\\Delta$ELPD the difference in ELPD relative to the average ELPD of the on average best model, and $\\Delta$SE the standard error in the average $\\Delta$ELPD. \\label{tab:res-tab-loo-comparison-res}') %>%
   kableExtra::kable_styling(latex_options = c("hold_position"), position = "center") %>%
   kableExtra::pack_rows("Holocellulose", 1, 9) %>%
   kableExtra::pack_rows("Klason lignin", 10, 8)
@@ -859,7 +860,7 @@ p_y_yhat_best <-
 ```{r m-reduce-underfitting-10}
 ### compute predictions for vegetation samples comparing the "best" model and th original Gaussian regression model
 
-# bin width: 50
+# bin width: 20
 d_veg_bin20_flat <-
   d_veg %>%
   ir::ir_bin(width = 20) %>%
@@ -1103,4 +1104,75 @@ p_veg_peat_difference <-
   theme(legend.position = "bottom")
 ```
 
+
+```{r m-reduce-underfitting-11}
+# predictions
+d_peat_pred_best_sum <- 
+  dplyr::bind_rows(
+    magrittr::add(
+      m1.8 %>%
+        rstanarm::posterior_predict(newdata = d_peat_bin20),
+      m2.8 %>%
+        rstanarm::posterior_predict(newdata = d_peat_bin20)
+    ) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best binned spectra",
+        variable_y = "Holocellulose + Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1, function(x) {
+      tibble::tibble(
+        sample_id = d_peat$sample_id, 
+        core_label = d_peat$core_label,
+        sampling_longitude = d_peat$sampling_longitude, 
+        sampling_latitude = d_peat$sampling_latitude, 
+        sampling_altitude = d_peat$sampling_altitude, 
+        sample_depth_lower = d_peat$sample_depth_lower, 
+        sample_depth_upper = d_peat$sample_depth_upper
+      )
+    })
+  )
+
+# predictions
+d_veg_pred_best_sum <- 
+  dplyr::bind_rows(
+    magrittr::add(
+      m1.8 %>%
+        rstanarm::posterior_predict(newdata = d_veg_bin20),
+      m2.8 %>%
+        rstanarm::posterior_predict(newdata = d_veg_bin20)
+    ) %>%
+      as.data.frame() %>%
+      purrr::map_df(function(x) {
+        tibble::tibble(
+          fit = median(x),
+          lwr = quantile(x, prob = 0.05),
+          upr = quantile(x, prob = 0.95)
+        )
+      }) %>%
+      dplyr::mutate(
+        model = "Best binned spectra",
+        variable_y = "Holocellulose + Klason lignin"
+      )
+  ) %>%
+  dplyr::bind_cols(
+    purrr::map_df(1, function(x) {
+      tibble::tibble(
+        sample_id = d_veg$sample_id, 
+        site_name = d_veg$site_name,
+        species_name = d_veg$species_name,
+        plant_part = d_veg$plant_part
+      )
+    })
+  )
+```
 

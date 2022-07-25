@@ -289,6 +289,13 @@ d_veg_pred <-
 p1 <-
   d_peat_pred %>%
   dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian") %>%
+  dplyr::mutate(
+    model =
+      dplyr::case_when(
+        model == "Gaussian, Bayesian" ~ "Gaussian",
+        TRUE ~ model
+      )
+  ) %>%
   ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
              x = sample_depth_lower, 
              colour = model, 
@@ -305,11 +312,19 @@ p1 <-
   facet_wrap(~ core_label, 
              scales = "free_y", 
              ncol = 2) +
-  scale_x_reverse()
+  scale_x_reverse() +
+  guides(color = guide_legend(title = "Bayesian model"), fill = guide_legend(title = "Bayesian model"))
 
 p2 <-
   d_peat_pred %>%
   dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian") %>%
+  dplyr::mutate(
+    model =
+      dplyr::case_when(
+        model == "Gaussian, Bayesian" ~ "Gaussian",
+        TRUE ~ model
+      )
+  ) %>%
   ggplot(aes(y = fit, ymin = lwr, ymax = upr, 
              x = sample_depth_lower, 
              colour = model, 
@@ -326,7 +341,8 @@ p2 <-
   facet_wrap(~ core_label, 
              scales = "free_y", 
              ncol = 2) +
-  scale_x_reverse()
+  scale_x_reverse() +
+  guides(color = guide_legend(title = "Bayesian model"), fill = guide_legend(title = "Bayesian model"))
 
 # combine plots
 p_gaussian_beta_depth_profile <-
@@ -493,15 +509,44 @@ d_range_pred_limits <-
 p1 <-
   d_range_pred %>%
   dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian") %>%
+  dplyr::mutate(
+    model =
+      dplyr::case_when(
+        model == "Gaussian, Bayesian" ~ "Gaussian",
+        TRUE ~ model
+      )
+  ) %>%
   ggplot(aes(x = fit_gaussian, y = fit, colour = model, fill = model)) +
   geom_hline(yintercept = c(0, 1), linetype = 2, colour = "grey") +
   geom_vline(xintercept = c(0, 1), linetype = 2, colour = "grey") +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, colour = NA) +
   geom_path() +
-  geom_point(data = d_peat_pred %>% dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian"), 
-             mapping = aes(x = fit_gaussian, y = fit)) +
-  geom_point(data = d_veg_pred %>% dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian"), 
-             mapping = aes(x = fit_gaussian, y = fit), shape = 4) +
+  geom_point(
+    data = 
+      d_peat_pred %>% 
+      dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian") %>%
+      dplyr::mutate(
+        model =
+          dplyr::case_when(
+            model == "Gaussian, Bayesian" ~ "Gaussian",
+            TRUE ~ model
+          )
+      ), 
+    mapping = aes(x = fit_gaussian, y = fit)
+  ) +
+  geom_point(
+    data = 
+      d_veg_pred %>% 
+      dplyr::filter(variable_y == "Holocellulose" & model != "Gaussian, non-Bayesian") %>%
+      dplyr::mutate(
+        model =
+          dplyr::case_when(
+            model == "Gaussian, Bayesian" ~ "Gaussian",
+            TRUE ~ model
+          )
+      ), 
+    mapping = aes(x = fit_gaussian, y = fit), shape = 4
+  ) +
   geom_point(data = d_range_pred_limits %>% dplyr::filter(variable_y == "Holocellulose"), 
              mapping = aes(x = fit_gaussian, y = fit), shape = 21, fill = "white", colour = "black") +
   labs(title = "Holocellulose", 
@@ -509,20 +554,50 @@ p1 <-
        y = expression(Predicted~values)) +
   coord_cartesian(ylim = c(0, 1), xlim = c(0, 1)) +
   scale_x_continuous(labels = function(x) x * 100) +
-  scale_y_continuous(labels = function(x) x * 100)
+  scale_y_continuous(labels = function(x) x * 100) +
+  guides(color = guide_legend(title = "Bayesian model"), fill = guide_legend(title = "Bayesian model"))
 
 p2 <-
   d_range_pred %>%
   dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian") %>%
+  dplyr::mutate(
+    model =
+      dplyr::case_when(
+        model == "Gaussian, Bayesian" ~ "Gaussian",
+        TRUE ~ model
+      )
+  ) %>%
   ggplot(aes(x = fit_gaussian, y = fit, colour = model, fill = model)) +
   geom_hline(yintercept = c(0, 1), linetype = 2, colour = "grey") +
   geom_vline(xintercept = c(0, 1), linetype = 2, colour = "grey") +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, colour = NA) +
   geom_path() +
-  geom_point(data = d_peat_pred %>% dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian"), 
-             mapping = aes(x = fit_gaussian, y = fit)) +
-  geom_point(data = d_veg_pred %>% dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian"), 
-             mapping = aes(x = fit_gaussian, y = fit), shape = 4) +
+  geom_point(
+    data = 
+      d_peat_pred %>% 
+      dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian") %>%
+      dplyr::mutate(
+        model =
+          dplyr::case_when(
+            model == "Gaussian, Bayesian" ~ "Gaussian",
+            TRUE ~ model
+          )
+      ), 
+    mapping = aes(x = fit_gaussian, y = fit)
+  ) +
+  geom_point(
+    data = 
+      d_veg_pred %>% 
+      dplyr::filter(variable_y == "Klason lignin" & model != "Gaussian, non-Bayesian") %>%
+      dplyr::mutate(
+        model =
+          dplyr::case_when(
+            model == "Gaussian, Bayesian" ~ "Gaussian",
+            TRUE ~ model
+          )
+      ), 
+    mapping = aes(x = fit_gaussian, y = fit), shape = 4
+  ) +
   geom_point(data = d_range_pred_limits %>% dplyr::filter(variable_y == "Klason lignin"), 
              mapping = aes(x = fit_gaussian, y = fit), shape = 21, fill = "white", colour = "black") +
   labs(title = "Klason lignin", 
@@ -530,7 +605,8 @@ p2 <-
        y = expression(Predicted~values)) +
   coord_cartesian(ylim = c(0, 1), xlim = c(0, 1)) +
   scale_x_continuous(labels = function(x) x * 100) +
-  scale_y_continuous(labels = function(x) x * 100)
+  scale_y_continuous(labels = function(x) x * 100) +
+  guides(color = guide_legend(title = "Bayesian model"), fill = guide_legend(title = "Bayesian model"))
 
 # combine plots
 p_gaussian_beta_range <-

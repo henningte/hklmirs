@@ -1,5 +1,5 @@
 ---
-title: 'Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging'
+title: 'Comment on Hodgkins et al. (2018): Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging'
 author: "Henning Teickner$^{1, *}$, Klaus-Holger Knorr$^1$"
 date: ""
 output: 

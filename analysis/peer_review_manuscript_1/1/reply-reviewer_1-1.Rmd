@@ -1,0 +1,65 @@
+---
+title: "Reply to Comments of Reviewer 1"
+author: "Henning Teickner, Klaus-Holger Knorr"
+date: "2022-07-24"
+output: 
+  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: true
+    keep_tex: true
+bibliography: ../../paper/references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Reviewer comments have prefix "Q" and our answers prefix "A". "old" in combination with line numbers refers to lines in the previous version of the manuscript. "new" in combination with line numbers refers to lines in the updated version of the manuscript.  
+
+## General comments
+
+> **Q1:** "This is an excellent manuscript based on an excellent rationale with sound research
+questions. It is very well structured and very well written. Building on previous data and
+models, Teickner & Knorr provide detailed explanations of the steps followed to evaluate
+the models, describing the limitations (representative of the training data sets, validation
+of the models, availability of key data of the models’ output, biases and uncertainties,
+etc.) and potential improvements. This research also shows the key importance of a
+detailed analysis of the models’ residuals as a way to identify model’s deficiencies. It is
+also a key finding that OM composition of mineral soils can also be accurately modeled.
+This research also shows the potential of MIR for SOM characterization and modelling and
+the importance of making data and code available for further improvements.  
+
+> Regarding the general issue of the preselection of peaks before modelling, one possible
+alternative is to perform PCA on all detected peaks to reduce the dimension and extract
+the most relevant spectral signals. PCA is usually efficient in allocating into different
+components the overlapping effects of more than one compound on a given spectral
+band/region."
+
+**A1:** Thank you for this encouraging comment. It is true that there are many more modeling approaches which probably would have a similar predictive accuracy as the approach we used here (especially since the sample size is small). For example, reviewer 2 suggested partial least squares regression (PLSR) as yet another alternative approach and there are many more approaches one could have tried (e.g. supervised PCR, iterative supervised PCR, interval PLSR, moving window interval PLS, etc; see e.g. @Xiaobo.2010).  
+We have the impression that PLSR is more commonly used than PCR since PLSR is more efficient in identifying latent variables related to the target variable being predicted (since it maximizes also the covariance of the computed latent variables to the target variable, whereas PCR only maximizes the variance of the computed latent variables, which comprise only the spectral data). That said, we think that it is good that different tools exist and, depending on the problem, one or the other approach may result in a better predictive accuracy. PCR (or a different dimension reduction approach) may be particularly useful if more data becomes available so that the computational expenses of our approach get too heavy [@Piironen.2020].  
+One advantage of the approach we used in comparison to dimension reduction approaches (e.g. PCR, PLSR), which summarize the original predictors into latent variables, is that coefficients for individual predictors are estimated more independently, since no latent variables are computed as summary of all predictors. Therefore, multiple regression with regularizing priors has the advantage of facilitating model interpretation (see e.g. Fig. 3).  
+We think that it is good to at least briefly mention these aspects to provide readers a better orientation. To this end, we added the following paragraph (old: l. 175; new: l. 185): "An alternative, popular, approach to approach 2 would be dimension reduction, for example via partial least squares regression, principal component regression, or variants of these [@Xiaobo.2010]. In general, there are many alternative approaches which could be tested to use more information contained within the spectra than the original models, and many of these probably would result in similar predictive performances as approach 2 (regularization), especially when sample sizes are small [@Xiaobo.2010; @Teickner.2022]. An advantage of regularization is that model coefficients are estimated more independently than in dimension reduction approaches, which makes it more straightforward to interpret model coefficients. The key is that the approaches we chose are suitable to analyze our research questions." 
+
+--------------------------------------------
+
+## Specific comments
+
+> **Q2:** "L277-279. Positive and negative coefficients for peaks at 1150 and 1270 cm-1 (aromatic CH bending). This may be due to they reflecting different lignin structures: 1270 cm-1 surely corresponds to guaiacol (G) moieties and 1150 cm-1 could correspond to syringol (S) moieties (although S most representative band is at 1310 cm-1). Both differ in content in the source peat vegetation and also show differences in resistance to degradation in peat depending on oxygen availability (see for example, Schellekens et al. 2012 Soil Biology and Biochemistry 53, 32-42). G lignin is less prone to degradation than S lignin and the G/S ratio of fen peat (more decomposed) is larger than that of bog peat (less decomposed) (see for example Martínez Cortizas et al., 2021 Boreas 50, 1161-1178)."
+
+**A2:** Thank you for this information, this is indeed interesting. Building on this: The G/S ratio is also different in the training dataset sample types. Softwood samples and needle samples have a higher G content than hardwood samples and leaves and grasses [@DelaCruz.2016]. They also have a (slightly) lower Klason lignin content than hardwood samples and leaves and grasses (supplementary Fig. S4).  
+This indicates that since the bin at 1150 cm$^{-1}$ is caused to some extent by S, and S has a larger abundance in samples with smaller (than average) Klason lignin contents, this may explain why the coefficient for this bin is negative. Likewise, the bin at 1270 cm$^{-1}$ is caused to some extent by G, G has a larger abundance in samples with larger (than average) Klason lignin content, and this may explain why the coefficient for this bin is positive.  
+To consider this hypothesis in the main text, we changed the text to (old: l. 277 to 279; new: l. 288): "A plausible explanation for the negative sign of the coefficient for the 1150 cm$^{-1}$ bin is that absorbance in this range is partly caused by syringyl units (S) [@Kubo.2005] and that training samples with higher S content have smaller Klason lignin contents (supplementary Fig. 4, @DelaCruz.2016), making this bin indicative of smaller Klason lignin contents. Likewise, a plausible explanation for the positive sign of the coefficient for the 1270 cm$^{-1}$ bin is that absorbance in this range is caused predominantly by guaiacyl units (G) [@Kubo.2005] and that training samples with higher G content have smaller Klason lignin contents (supplementary Fig. 4, @DelaCruz.2016), making this bin indicative of larger Klason lignin contents."
+
+--------------------------------------------
+
+> **Q3:** "L.424 I find this “implication” to be quite important and other ways of spectral normalization should be tested in the future."
+
+**A3** We completely agree with this statement. We currently are not aware of a solution to this problem, other than to specify precisely under which conditions a prediction model produces erroneous predictions.
+
+--------------------------------------------
+
+```{r child="reply-additional.Rmd"}
+```
+
+## References

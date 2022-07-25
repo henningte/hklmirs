@@ -6,6 +6,7 @@ analysis/paper/002-reply-main_files
 analysis/paper/008-paper-supplementary_files
 analysis/discussion
 analysis/coverletter
+analysis/peer_review_manuscript_1/1/*.html
 renv
 *cache*
 *.pdf

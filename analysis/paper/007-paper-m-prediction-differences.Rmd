@@ -805,11 +805,11 @@ p_pred_diff_hol_intensity4 <-
   ) %>%
   dplyr::filter(p_index) %>%
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels %>% rev())) %>%
-  ggplot(aes(x = intensity_1250 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
+  ggplot(aes(x = intensity_3400 %>% scale(), y = hol_hat_or - hol_hat, colour = data_type)) +
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
-  facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
+  facet_grid(cut_number(carb, n = facet_n_level) ~ data_type) +
   labs(y = "Prediction difference", x = expression("Intensity at 3400 cm"^{-1}), 
        title = expression("Intensity at 3400 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
@@ -831,7 +831,7 @@ p_pred_diff_hol_intensity5 <-
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
-  facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
+  facet_grid(cut_number(carb, n = facet_n_level) ~ data_type) +
   labs(y = "Prediction difference", x = expression("Intensity at 1250 cm"^{-1}), 
        title = expression("Intensity at 1250 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
@@ -853,7 +853,7 @@ p_pred_diff_hol_intensity6 <-
   geom_hline(yintercept = 0, colour = "grey50") +
   geom_point(alpha = 0.3, shape = 16) + 
   geom_smooth(formula = y ~ x, method = "loess", se = FALSE) +
-  facet_grid(data_type ~ cut_number(carb, n = facet_n_level)) +
+  facet_grid(cut_number(carb, n = facet_n_level) ~ data_type) +
   labs(y = "Prediction difference", x = expression("Intensity at 1590 cm"^{-1}), 
        title = expression("Intensity at 1590 cm"^{-1})) +
   guides(colour = guide_legend(title = "Dataset")) +
@@ -1019,7 +1019,7 @@ p_pred_diff_kl_histogram1 <-
   dplyr::mutate(data_type = factor(data_type, levels = data_type_levels)) %>%
   ggplot() +
   geom_histogram(aes(x = arom15arom16 %>% scale(), fill = data_type), bins = 30) +
-  facet_wrap(~ cut_number(arom15arom16_rel, n = 4)) +
+  facet_wrap(~ cut_number(ifelse(arom15arom16_rel < 6.32e-10, 0, arom15arom16_rel), n = 4)) +
   labs(y = "Count", x = "arom15arom16") +
   guides(fill = guide_legend(title = "Dataset")) +
   theme(legend.position = "bottom") +
