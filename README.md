@@ -2,7 +2,7 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 [![DOI](https://zenodo.org/badge/465653387.svg)](https://zenodo.org/badge/latestdoi/465653387)
-![Last-changedate](https://img.shields.io/badge/last%20change-2022--06--01-brightgreen.svg)
+![Last-changedate](https://img.shields.io/badge/last%20change-2022--07--29-brightgreen.svg)
 
 # hklmirs
 
@@ -15,9 +15,9 @@ preparation):
 > methods, June 1, 2022. DOI:
 > [10.5194/soil-2022-27](https://doi.org/10.5194/soil-2022-27).
 
-> Henning Teickner and Klaus-Holger Knorr (in preparation): Predicting
-> Absolute Holocellulose and Klason Lignin Contents for Peat Remains
-> Challenging.
+> Henning Teickner and Klaus-Holger Knorr (in preparation): *Comment on
+> Hodgkins et al. (2018): Predicting Absolute Holocellulose and Klason
+> Lignin Contents for Peat Remains Challenging.*
 
 ### How to cite
 
@@ -26,9 +26,10 @@ Please cite this compendium as:
 > Henning Teickner and Klaus-Holger Knorr, (2022). *Compendium of R code
 > and data for “Improving Models to Predict Holocellulose and Klason
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
-> Spectra” and “Predicting Absolute Holocellulose and Klason Lignin
-> Contents for Peat Remains Challenging”*. Accessed 01 Jun 2022. Online
-> at <https://doi.org/10.5281/zenodo.6325760>
+> Spectra” and “Comment on Hodgkins et al. (2018): Predicting Absolute
+> Holocellulose and Klason Lignin Contents for Peat Remains
+> Challenging”*. Accessed 29 Jul 2022. Online at
+> <https://doi.org/10.5281/zenodo.6325760>
 
 ## Contents
 
@@ -59,9 +60,9 @@ The **analysis** directory contains:
         calibrated on training samples with higher mineral contents.
       - [006-paper-m-prediction-domain.Rmd](analysis/paper/006-paper-m-prediction-domain.Rmd):
         Analyzes the prediction domain (Wadoux et al. 2021) of the
-        original models and the modified models and identifie under
+        original models and the modified models and identifies under
         which conditions models extrapolate for peat and vegetation
-        smaples from Hodgkins et al. (2018).
+        samples from Hodgkins et al. (2018).
       - [007-paper-m-prediction-differences.Rmd](analysis/paper/007-paper-m-prediction-differences.Rmd):
         Compares predictions for the training data and the peat and
         vegetation data from Hodgkins et al. (2018) for the original
@@ -71,12 +72,12 @@ The **analysis** directory contains:
         Computes supplementary analyses and figures for the first
         manuscript.
       - [001-reply-main.Rmd](analysis/paper/001-reply-main.Rmd): This is
-        the main script for manuscript 2. It is run from within
+        the main script for manuscript 2. It is compiled from within
         `001-paper-main.Rmd` and produces the supplementary information
         for manuscript 2.
       - [002-reply-main.Rmd](analysis/paper/002-reply-main.Rmd): This
-        script produces the document for manuscript 2. It is run from
-        within `001-reply-main.Rmd`.
+        script produces the document for manuscript 2. It is compiled
+        from within `001-reply-main.Rmd`.
 
   - [:file\_folder: data](/analysis/data): Data used in the analysis.
     Note that raw data is not stored in [:file\_folder:
@@ -134,7 +135,7 @@ remotes::install_github("henningte/hklmirs")
 
 #### Reproduce the analyses
 
-To reproduce the analyses for the paper, open the Rstudio project
+To reproduce the analyses for the paper, open the RStudio project
 included in this research compendium and run the Rmarkdown script in
 `analysis/paper/001-paper-main.rmd`.
 

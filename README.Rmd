@@ -59,7 +59,7 @@ manuscript2$year <-
 
 manuscript2$title <-
   manuscript2_yaml$title %>%
-  paste0(".")
+  paste0("_", ., "._")
 
 manuscript2$journal <-
   eval(parse(text = manuscript2_yaml$journal %>% stringr::str_remove("^`r ") %>% stringr::str_remove("`$"))) %>%
@@ -96,11 +96,11 @@ The **analysis** directory contains:
     - [003-paper-m-gaussian-beta.Rmd](analysis/paper/003-paper-m-gaussian-beta.Rmd): Computes models assuming a Beta distribution for holocellulose and Klason lignin contents and compares them to the original models.
     - [004-paper-m-reduce-underfitting.Rmd](analysis/paper/004-paper-m-reduce-underfitting.Rmd): Extents the Beta regression models by including additional variables (additional peaks) or using a different approach (using measured spectral intensities of binned spectra instead of extracted peaks), and validates these models using LOO-CV.
     - [005-paper-m-minerals.Rmd](analysis/paper/005-paper-m-minerals.Rmd): Uses the models from `003-paper-m-gaussian-beta.Rmd` to test how accurate a model for holocellulose content is which is also calibrated on training samples with higher mineral contents.
-    - [006-paper-m-prediction-domain.Rmd](analysis/paper/006-paper-m-prediction-domain.Rmd): Analyzes the prediction domain [@Wadoux.2021] of the original models and the modified models and identifie under which conditions models extrapolate for peat and vegetation smaples from @Hodgkins.2018.
+    - [006-paper-m-prediction-domain.Rmd](analysis/paper/006-paper-m-prediction-domain.Rmd): Analyzes the prediction domain [@Wadoux.2021] of the original models and the modified models and identifies under which conditions models extrapolate for peat and vegetation samples from @Hodgkins.2018.
     - [007-paper-m-prediction-differences.Rmd](analysis/paper/007-paper-m-prediction-differences.Rmd): Compares predictions for the training data and the peat and vegetation data from @Hodgkins.2018 for the original models from @Hodgkins.2018 and the modified models from `004-paper-m-reduce-underfitting.Rmd`.
     - [008-paper-supplementary.Rmd](analysis/paper/008-paper-supplementary.Rmd): Computes supplementary analyses and figures for the first manuscript.
-    - [001-reply-main.Rmd](analysis/paper/001-reply-main.Rmd): This is the main script for manuscript 2. It is run from within `001-paper-main.Rmd` and produces the supplementary information for manuscript 2.
-    - [002-reply-main.Rmd](analysis/paper/002-reply-main.Rmd): This script produces the document for manuscript 2. It is run from within `001-reply-main.Rmd`.
+    - [001-reply-main.Rmd](analysis/paper/001-reply-main.Rmd): This is the main script for manuscript 2. It is compiled from within `001-paper-main.Rmd` and produces the supplementary information for manuscript 2.
+    - [002-reply-main.Rmd](analysis/paper/002-reply-main.Rmd): This script produces the document for manuscript 2. It is compiled from within `001-reply-main.Rmd`.
     
 - [:file\_folder: data](/analysis/data): Data used in the analysis. Note that raw data is not stored in [:file\_folder: raw_data](/analysis/data/raw_data) (empty folder), but in [:file\_folder: /inst/extdata](/inst/extdata). [:file\_folder: derived_data](/analysis/data/derived_data) contains derived data computed from the scripts. The raw data are derived from @Hodgkins.2018.
 
@@ -136,7 +136,7 @@ remotes::install_github("henningte/hklmirs")
 
 #### Reproduce the analyses
 
-To reproduce the analyses for the paper, open the Rstudio project included in this research compendium and run the Rmarkdown script in `analysis/paper/001-paper-main.rmd`.
+To reproduce the analyses for the paper, open the RStudio project included in this research compendium and run the Rmarkdown script in `analysis/paper/001-paper-main.rmd`.
 
 Running the whole script takes about 12 hours and occupies additional disk space of ~2 Gb.  
 
