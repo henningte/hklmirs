@@ -2,7 +2,7 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 [![DOI](https://zenodo.org/badge/465653387.svg)](https://zenodo.org/badge/latestdoi/465653387)
-![Last-changedate](https://img.shields.io/badge/last%20change-2022--07--29-brightgreen.svg)
+![Last-changedate](https://img.shields.io/badge/last%20change-2022--10--26-brightgreen.svg)
 
 # hklmirs
 
@@ -28,7 +28,7 @@ Please cite this compendium as:
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
 > Spectra” and “Comment on Hodgkins et al. (2018): Predicting Absolute
 > Holocellulose and Klason Lignin Contents for Peat Remains
-> Challenging”*. Accessed 29 Jul 2022. Online at
+> Challenging”*. Accessed 26 Oct 2022. Online at
 > <https://doi.org/10.5281/zenodo.6325760>
 
 ## Contents
