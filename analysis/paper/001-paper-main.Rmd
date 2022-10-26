@@ -54,7 +54,7 @@ authorcontribution: |
 #disclaimer: |
 #  We like Copernicus.
 acknowledgements: |
-  We like to thank @Hodgkins.2018 and @DelaCruz.2016 for provision of data and code to reproduce and modify their analyses, and @Allaire.2020 for provision of an Rmarkdown template. We thank Suzanne Hodgkins and Jeff Chanton for constructive discussions which helped to improve a first version of this manuscript. This study was funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) grant no. KN 929/23-1 to Klaus-Holger Knorr and grant no. PE 1632/18-1 to Edzer Pebesma. We acknowledge support from the Open Access Publication Fund of the University of Münster.
+  We like to thank @Hodgkins.2018 and @DelaCruz.2016 for provision of data and code to reproduce and modify their analyses, and @Allaire.2020 for provision of an Rmarkdown template. We thank Suzanne Hodgkins and Jeff Chanton for constructive discussions and Stephen Chapman and an anonymous reviewer for comments which helped to improve previous versions of this manuscript. This study was funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) grant no. KN 929/23-1 to Klaus-Holger Knorr and grant no. PE 1632/18-1 to Edzer Pebesma. We acknowledge support from the Open Access Publication Fund of the University of Münster.
 #appendix: |
 date: "`r Sys.Date()`"
 output: 
@@ -98,6 +98,9 @@ ggplot2::theme_set(ggplot2::theme_classic() +
 
 # table print options
 options(knitr.table.format = "latex")
+
+# color theme (source: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette)
+palette_cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
 \introduction[Introduction]

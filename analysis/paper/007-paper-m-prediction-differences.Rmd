@@ -407,9 +407,16 @@ p1 <-
   labs(x = "Fitted values", y = "Measured values",
        title = "Holocellulose") +
   coord_fixed() +
-  scale_colour_manual(values = scales::hue_pal()(length(levels(d_pred_diff$sample_type))),
-                    labels = levels(d_pred_diff$sample_type), 
-                    drop = FALSE)
+  scale_color_manual(
+    values = palette_cb,
+    labels = levels(d_pred_diff$sample_type), 
+    drop = FALSE
+  ) +
+  scale_fill_manual(
+    values = palette_cb,
+    labels = levels(d_pred_diff$sample_type), 
+    drop = FALSE
+  )
 
 ## Klason lignin
 
@@ -428,9 +435,16 @@ p2 <-
   labs(x = "Fitted values", y = "Measured values",
        title = "Klason lignin") +
   coord_fixed() +
-  scale_colour_manual(values = scales::hue_pal()(length(levels(d_pred_diff$sample_type))),
-                    labels = levels(d_pred_diff$sample_type), 
-                    drop = FALSE)
+  scale_color_manual(
+    values = palette_cb,
+    labels = levels(d_pred_diff$sample_type), 
+    drop = FALSE
+  ) +
+  scale_fill_manual(
+    values = palette_cb,
+    labels = levels(d_pred_diff$sample_type), 
+    drop = FALSE
+  )
 
 # combine
 p_pred_diff_train2 <-

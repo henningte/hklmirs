@@ -83,7 +83,8 @@ p_y_yhat_minerals <-
   labs(x = "Fitted",
        y = "Measured") +
   guides(colour = guide_legend(title = "Mineral rich samples")) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = palette_cb[-1])
 ```
 
 

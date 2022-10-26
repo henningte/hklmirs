@@ -11,6 +11,7 @@ bibliography: references
 header-includes:
    - \usepackage{float}
    - \renewcommand\thesection{S\arabic{section}}
+   - \renewcommand{\thefigure}{S\arabic{figure}}
 ---
 
 ```{r sup-setup, echo=FALSE}
@@ -256,7 +257,8 @@ p2 <-
   labs(y = "Klason lignin [mass-%]", x = "Holocellulose [mass-%]") +
   geom_smooth(formula = y ~ x, method = "lm", se = FALSE) +
   guides(colour = guide_legend(title = "Sample type", ncol = 3, title.position="top")) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = palette_cb)
 ```
 
 ```{r res-sup-kl-hol, echo=FALSE, out.width="100%", fig.height=4.5, fig.width=7, fig.cap='Measured holocellulose and Klason lignin contents in OM samples of the training data of \\citet{Hodgkins.2018}. A: Boxplots of the sum of the measured holocellulose and Klason lignin contents for different sample types in the training data. B: Klason lignin content versus holocellulose content for the training data samples. Colours represent different sample types and lines are linear regression lines fitted to the data.'}

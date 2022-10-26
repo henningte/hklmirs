@@ -701,7 +701,9 @@ p1 <-
   facet_wrap(~ core_label, 
              scales = "free_y", 
              ncol = 2) +
-  scale_x_reverse()
+  scale_x_reverse() +
+  scale_color_manual(values = palette_cb[-1]) +
+  scale_fill_manual(values = palette_cb[-1])
 
 p2 <-
   d_peat_pred_best %>%
@@ -723,7 +725,9 @@ p2 <-
   facet_wrap(~ core_label, 
              scales = "free_y", 
              ncol = 2) +
-  scale_x_reverse()
+  scale_x_reverse() +
+  scale_color_manual(values = palette_cb[-1]) +
+  scale_fill_manual(values = palette_cb[-1])
 
 # combine plots
 p_gaussian_beta_depth_profile_best <-
