@@ -1,5 +1,5 @@
 ---
-title: 'Supplementary Information to: "Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging"'
+title: 'Supplementary Information to: "Comment on Hodgkins et al. (2018): Predicting Absolute Holocellulose and Klason Lignin Contents for Peat Remains Challenging"'
 author: "Henning Teickner, Klaus-Holger Knorr"
 date: ""
 output: 
@@ -16,6 +16,7 @@ header-includes:
    - \linenumbers
    - \usepackage{setspace}
    - \doublespacing
+fontsize: 12pt
 ---
 
 ```{r setup-reply, include=FALSE}
