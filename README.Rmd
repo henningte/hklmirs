@@ -76,7 +76,7 @@ manuscript2$doi <-
 
 This repository contains the data and code for our two manuscripts (in preparation):
 
-> Henning Teickner, and Klaus-Holger Knorr (2022; preprint): _Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid Infrared Spectra_. Preprint. Soil and methods, June 1, 2022. DOI: [10.5194/soil-2022-27](https://doi.org/10.5194/soil-2022-27).
+> Henning Teickner, and Klaus-Holger Knorr (2022): _Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid-Infrared Spectra_. SOIL 8 (2): 699–715. DOI: [10.5194/soil-8-699-2022](https://doi.org/10.5194/soil-8-699-2022).
 
 > `r paste(manuscript2$authors, "(in preparation):", manuscript2$title)`
 

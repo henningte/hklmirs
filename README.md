@@ -2,22 +2,20 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 [![DOI](https://zenodo.org/badge/465653387.svg)](https://zenodo.org/badge/latestdoi/465653387)
-![Last-changedate](https://img.shields.io/badge/last%20change-2022--10--26-brightgreen.svg)
+![Last-changedate](https://img.shields.io/badge/last%20change-2022--11--23-brightgreen.svg)
 
 # hklmirs
 
 This repository contains the data and code for our two manuscripts (in
 preparation):
 
-> Henning Teickner, and Klaus-Holger Knorr (2022; preprint): *Improving
-> Models to Predict Holocellulose and Klason Lignin Contents for Peat
-> Soil Organic Matter with Mid Infrared Spectra*. Preprint. Soil and
-> methods, June 1, 2022. DOI:
-> [10.5194/soil-2022-27](https://doi.org/10.5194/soil-2022-27).
+> Henning Teickner, and Klaus-Holger Knorr (2022): *Improving Models to
+> Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic
+> Matter with Mid-Infrared Spectra*. SOIL 8 (2): 699–715. DOI:
+> [10.5194/soil-8-699-2022](https://doi.org/10.5194/soil-8-699-2022).
 
-> Henning Teickner and Klaus-Holger Knorr (in preparation): *Comment on
-> Hodgkins et al. (2018): Predicting Absolute Holocellulose and Klason
-> Lignin Contents for Peat Remains Challenging.*
+> Henning Teickner and Klaus-Holger Knorr (in preparation): *The need to
+> reinterpret Hodgkins et al. (2018).*
 
 ### How to cite
 
@@ -26,9 +24,8 @@ Please cite this compendium as:
 > Henning Teickner and Klaus-Holger Knorr, (2022). *Compendium of R code
 > and data for “Improving Models to Predict Holocellulose and Klason
 > Lignin Contents for Peat Soil Organic Matter with Mid Infrared
-> Spectra” and “Comment on Hodgkins et al. (2018): Predicting Absolute
-> Holocellulose and Klason Lignin Contents for Peat Remains
-> Challenging”*. Accessed 26 Oct 2022. Online at
+> Spectra” and “The need to reinterpret Hodgkins et al. (2018)”*.
+> Accessed 23 Nov 2022. Online at
 > <https://doi.org/10.5281/zenodo.6325760>
 
 ## Contents
