@@ -1,5 +1,5 @@
 ---
-title: 'Supplementary Information to: "The need to reinterpret Hodgkins et al. (2018)"'
+title: 'Supplementary Information to: "Comment on Hodgkins et al. (2018)"'
 author: "Henning Teickner, Klaus-Holger Knorr"
 date: ""
 output: 
@@ -792,6 +792,8 @@ p1 <-
                dplyr::filter(model != "Modified, only MIRS-based" & variable_y == "Holocellulose"), aes(y = fit_mean, x = x_latitude + ifelse(model == "Original", 0, 0.1), colour = model)) +
   scale_y_continuous(labels = function(x) x * 100) +
   scale_x_continuous(labels = function(x) round(x * x_latitude_scale + x_latitude_center, 0)) +
+  scale_color_manual(values = colors_prediction_domain[c(3, 2)]) +
+  scale_fill_manual(values = colors_prediction_domain[c(3, 2)]) +
   labs(x = "Latitude [°]", y = "Content [mass-%]", title = "Holocellulose") +
   theme(legend.position = "bottom")
 
@@ -820,6 +822,8 @@ p2 <-
                dplyr::filter(model != "Modified, only MIRS-based" & variable_y == "Klason lignin"), aes(y = fit_mean, x = x_latitude + ifelse(model == "Original", 0, 0.1), colour = model)) +
   scale_y_continuous(labels = function(x) x * 100) +
   scale_x_continuous(labels = function(x) round(x * x_latitude_scale + x_latitude_center, 0)) +
+  scale_color_manual(values = colors_prediction_domain[c(3, 2)]) +
+  scale_fill_manual(values = colors_prediction_domain[c(3, 2)]) +
   labs(x = "Latitude [°]", y = "Content [mass-%]", title = "Klason lignin") +
   theme(legend.position = "bottom")  
 
@@ -1048,54 +1052,86 @@ d_peat_pred_best_diff_mean1 <-
 p1 <-
   d_peat_pred_best_latitude_depth %>%
   dplyr::filter(variable_y == "Holocellulose") %>%
-  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified model", "Original model")) %>%
   dplyr::arrange(sample_depth_lower) %>%
-  ggplot(aes(y = fit, 
-             ymin = lwr,
-             ymax = upr,
-             x = sample_depth_lower, 
-             colour = latitude_class, 
-             fill = latitude_class)) +
-  geom_hline(yintercept = c(0.11, 0.16, 0.21, 0.37), colour = "grey", linetype = 2) +
+  ggplot(
+    aes(
+      y = fit, 
+      ymin = lwr,
+      ymax = upr,
+      x = sample_depth_lower, 
+      colour = latitude_class, 
+      fill = latitude_class
+    )
+  ) +
+  geom_hline(
+    yintercept = c(0.11, 0.16, 0.21, 0.37), 
+    colour = "grey", 
+    linetype = 2
+  ) +
   geom_path() +
   geom_ribbon(alpha = 0.2, colour = NA) +
   coord_flip() +
-  labs(title = "Holocellulose", 
-       y = expression(Holocellulose~content~"[mass-%]"),
-       x = "Lower layer boundary depth [cm]") +
-  facet_wrap(~ model, 
-             scales = "free_y", 
-             ncol = 1) +
+  labs(
+    title = "Holocellulose", 
+    y = expression(Holocellulose~content~"[mass-%]"),
+    x = "Lower layer boundary depth [cm]"
+  ) +
+  facet_wrap(~ model, scales = "free_y", ncol = 1) +
   scale_x_reverse() +
   scale_y_continuous(labels = function(x) x * 100) +
-  guides(colour = guide_legend(title = expression(Latitude>45~degree*N)),
-         fill = guide_legend(title = expression(Latitude>45~degree*N)))
+  scale_color_manual(values = c("indianred", "dodgerblue")) +
+  scale_fill_manual(values = c("indianred", "dodgerblue")) +
+  guides(
+    colour = guide_legend(title = expression(Latitude>45~degree*N)),
+    fill = guide_legend(title = expression(Latitude>45~degree*N))
+  ) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_text(size = 12)
+  )
 
 p2 <-
   d_peat_pred_best_latitude_depth %>%
   dplyr::filter(variable_y == "Klason lignin") %>%
-  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified", model)) %>%
+  dplyr::mutate(model = ifelse(model == "Best binned spectra", "Modified model", "Original model")) %>%
   dplyr::arrange(sample_depth_lower) %>%
-  ggplot(aes(y = fit, 
-             ymin = lwr,
-             ymax = upr,
-             x = sample_depth_lower, 
-             colour = latitude_class, 
-             fill = latitude_class)) +
-  geom_hline(yintercept = c(0.22, 0.32, 0.35, 0.48), colour = "grey", linetype = 2) +
+  ggplot(
+    aes(
+      y = fit, 
+      ymin = lwr,
+      ymax = upr,
+      x = sample_depth_lower, 
+      colour = latitude_class, 
+      fill = latitude_class
+    )
+  ) +
+  geom_hline(
+    yintercept = c(0.22, 0.32, 0.35, 0.48), 
+    colour = "grey", 
+    linetype = 2
+  ) +
   geom_path() +
   geom_ribbon(alpha = 0.2, colour = NA) +
   coord_flip() +
-  labs(title = "Klason lignin", 
-       y = expression(Klason~lignin~content~"[mass-%]"),
-       x = "Lower layer boundary depth [cm]") +
-  facet_wrap(~ model, 
-             scales = "free_y", 
-             ncol = 1) +
+  labs(
+    title = "Klason lignin", 
+    y = expression(Klason~lignin~content~"[mass-%]"),
+    x = "Lower layer boundary depth [cm]"
+  ) +
+  facet_wrap(~ model, scales = "free_y", ncol = 1) +
   scale_x_reverse() + 
   scale_y_continuous(labels = function(x) x * 100) +
-  guides(colour = guide_legend(title = expression(Latitude>45~degree*N)),
-         fill = guide_legend(title = expression(Latitude>45~degree*N)))
+  scale_color_manual(values = c("indianred", "dodgerblue")) +
+  scale_fill_manual(values = c("indianred", "dodgerblue")) +
+  guides(
+    colour = guide_legend(title = expression(Latitude>45~degree*N)),
+    fill = guide_legend(title = expression(Latitude>45~degree*N))
+  ) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_text(size = 12)
+  )
 
 # combine
 p_depth_profiles_latitude <- 
