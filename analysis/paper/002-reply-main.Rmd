@@ -1,5 +1,5 @@
 ---
-title: 'The need to reinterpret Hodgkins et al. (2018)'
+title: 'Comment on Hodgkins et al. (2018)'
 author: "Henning Teickner$^{1, *}$, Klaus-Holger Knorr$^1$"
 date: ""
 output: 
@@ -29,39 +29,36 @@ knitr::opts_chunk$set(fig.align = "center",
 $^1$ ILÖK, Ecohydrology and Biogeochemistry Group, University of Münster, Heisenbergstr. 2, 48149 Münster, Germany  
 $^*$ Corresponding author: Henning Teickner (henning.teickner@uni-muenster.de)  
  
-@Hodgkins.2018 used spectral prediction models to estimate two major peat organic matter fractions --- holocellulose and Klason lignin --- in peat cores collected along a latitudinal gradient. Based on this, @Hodgkins.2018 argue that (sub)tropical peat deposits accumulate despite high temperatures due to higher Klason lignin over holocellulose contents, and that climate warming is a risk to northern surface peat deposits which would decompose faster due to higher holocellulose contents, but not to deeper peat which is more similar to tropical peat. In a recent study, we have shown that the spectral prediction models behind this conclusion are not valid for peat samples [@Teickner.2022f]. In addition to that, we show here that @Hodgkins.2018 did not consider important uncertainty sources in their analysis. This raises the question whether the results of @Hodgkins.2018, and of a follow-up study with more data [@Verbeke.2022], remain valid or how they have to be reinterpreted. 
+@Hodgkins.2018 used mid infrared spectra (MIRS) to make inferences about the stability of peat against decomposition along a latitudinal gradient from the tropics to northern latitudes. Recently, we have shown that these spectral prediction models are biased and their predictions more uncertain than considered in @Hodgkins.2018 [@Teickner.2022f]. Here, we show what consequences this bias and uncertainty and additional neglected uncertainty sources have for the main conclusions in @Hodgkins.2018.
 
-We show that the results of @Hodgkins.2018 are to some extent still valid for holocellulose, but only when reinterpreted in terms of differences in peak heights, which is a major obstacle to a quantitative understanding of the control of peat chemistry on decomposition. For Klason lignin, remaining uncertainties are high even after reinterpretation in terms of peak heights. Even more, there is evidence that near-surface peat Klason lignin contents and residual enrichment of Klason lignin during decomposition have been underestimated. It thus remains uncertain whether and to what extent the reported latitudinal gradient in peat chemistry will control future peatland carbon losses.
+In particular, we find that:
 
+1. Larger aromatic contents may be necessary to stabilize tropical near-surface peat against decomposition and aromatics may accumulate at a higher rate with depth in tropical peatlands than estimated by @Hodgkis.2018.
 
-## Why are the results highly uncertain? {.unnumbered}
+2. Larger uncertainties indicate that also larger differences in aromatic contents between (sub)tropical and high latitude peat than estimated by @Hodgkins.2018 are possible, also between deeper peat.
 
-The original models to estimate peat holocellulose and Klason lignin contents are not valid and, highly uncertain, and thus likely biased --- especially for decomposed peat --- and therefore should not be used to estimate holocellulose and Klason lignin contents [@Teickner.2022f]. 
-Besides, there are that two important sources of uncertainty have been neglected in @Hodgkins.2018: first, the prediction uncertainty of the spectral prediction models, and second, the uncertainty introduced when computing near-surface average holocellulose and Klason lignin contents from estimates for individual peat layers.  
-We illustrate the impact of all these factors by recomputing the latitudinal gradient and depth profiles with the modified, probably more accurate, but still biased, models from @Teickner.2022f, while considering these uncertainty sources (supporting information S1).  
-This analysis shows that both the estimated slopes for the latitudinal gradient (95% confidence intervals are [`r s1_res_holocellulose %>% dplyr::pull(b_latitude) %>% quantile(probs = c(0.025, 0.975)) %>% round(1) %>% paste0(collapse = ",")`] and [`r s1_res_klason_lignin %>% dplyr::pull(b_latitude) %>% quantile(probs = c(0.025, 0.975)) %>% round(1) %>% paste0(collapse = ",")`] for holocellulose and Klason lignin, respectively; figure \@ref(fig:reply-res-p-sites-latitude) and supporting figure 3<!---\@ref(fig:reply-res-p-latitude-poc-slope)--->) and differences in the depth profiles are highly uncertain due to these uncertainty sources (figure \@ref(fig:reply-res-p-depth-profiles-latitude)).  
+3. More research should focus on how estimates of carbohydrate and aromatic contents from MIRS may be confounded by other organic matter fractions, in particular proteins. As a first step, this requires accurate concepts to name organic matter fractions and variables used in the interpretation of MIRS.
 
-## Klason lignin contents and residual enrichment with decomposition probably are larger {.unnumbered}
+These uncertainties have the potential to change predictions of models on global peat stability as well as what stabilizes peat against decomposition if temperatures rise and thus add in particular to the debate to what extent global warming may increase decomposition of northern deep peat deposits (e.g. @Dorrepaal.2009, @Wilson.2016, @Baysinger.2022).
 
-In a previous publication, we have shown that the spectral prediction model for Klason lignin underestimates Klason lignin contents especially when these are $>30$ mass-% [@Teickner.2022f]. Our modified model is much less biased [@Teickner.2022f] and therefore enables a rough analysis of the order of magnitude of the bias. This allowed us to analyze what consequences the bias can have for the estimated near-surface ($\le50$ cm) peat Klason lignin contents and residual enrichment of Klason lignin during decomposition (supporting information S1).   
-With our modified model, near-surface peat Klason lignin contents are on average ~10 to 15 mass-% larger across the latitudinal gradient (figure \@ref(fig:reply-res-p-sites-latitude)). Specifically, average (sub)tropical ($<45 ^\circ$N) near-surface peat Klason lignin contents are `r d_peat_pred_best_diff_mean %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude & surface_peat) %>% dplyr::pull(y_hat_diff) %>% median() %>% magrittr::multiply_by(100) %>% round(0)` [`r d_peat_pred_best_diff_mean %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude & surface_peat) %>% dplyr::pull(y_hat_diff) %>% quantile(probs = c(0.025, 0.975)) %>% magrittr::multiply_by(100) %>% round(0) %>% paste(collapse = ",")`] mass-% (median, lower and upper 95% prediction interval limit) larger than with the original model. There is also tentative indication for on average larger differences between deep (sub)tropical ($<45 ^\circ$N) and high-latitude ($\ge45 ^\circ$N) peat (figure \@ref(fig:reply-res-p-depth-profiles-latitude)).    
-Residual enrichment of Klason lignin during decomposition probably has been underestimated. A rough estimate for the residual enrichment of Klason lignin during decomposition is the difference in Klason lignin content between near-surface peat and deeper peat. With the modified model, this difference is on average for (sub)tropical peatlands `r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude) %>% dplyr::pull(res) %>% median() %>% magrittr::multiply_by(100) %>% round(0)` [`r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude) %>% dplyr::pull(res) %>% quantile(probs = c(0.025, 0.975)) %>% magrittr::multiply_by(100) %>% round(0) %>% paste(collapse = ",")`] mass-% larger (figure \@ref(fig:reply-res-p-depth-profiles-latitude)). For high latitude peatlands the difference is smaller (`r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & high_latitude) %>% dplyr::pull(res) %>% median() %>% magrittr::multiply_by(100) %>% round(0)` [`r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & high_latitude) %>% dplyr::pull(res) %>% quantile(probs = c(0.025, 0.975)) %>% magrittr::multiply_by(100) %>% round(0) %>% paste(collapse = ",")`] mass-%).  
-Consequently, in general --- and especially in (sub)tropical peatlands --- the average residual enrichment of Klason lignin due to decomposition probably has been underestimated by the original model. A consequence of this in light of climate change is that high latitude peat deposits may be even more prone to shifts in decomposition rates than suggested by the original results.  
+That said, theoretical considerations of decomposition processes alone support the suggested gradient in peat chemistry and @Hodgkins.2018 made an important contribution in providing the first open access models and estimates for peat carbohydrate and aromatics content on a large scale. We hope that our comment highlights that accuracy matters and that it helps to focus research on the problems which hamper improving this accuracy.
+
+In the following, we will use the terms holocellulose instead of the more general term carbohydrates and Klason lignin instead of the more general term aromatics. These are the accurate terms for the organic matter fractions quantified in @Hodgkins.2018.
 
 
-## How to reinterpret @Hodgkins.2018 {.unnumbered}
+# Uncertainty sources not considered in @Hodgkins.2018 {.unnumbered}
 
-The mid-infrared spectra (MIRS), which have been used to compute the spectral prediction models, have so far mostly been interpreted in terms qualitative concepts for organic matter fractions (e.g. @Cocozza.2003): the `carb` peak [@Hodgkins.2018] --- the only predictor for holocellulose content in @Hodgkins.2018 --- is an indicator for "carbohydrates" in mineral-poor peat [@Hodgkins.2018]; the `arom15arom16` peak [@Hodgkins.2018] --- the only predictor for Klason lignin content in @Hodgkins.2018 --- is an indicator for "aromatics" in peat with low protein and carbonate contents [@Stuart.2004; @Tatzber.2007; @Teickner.2022f] (note that we write "carbohydrates" and "aromatics" because, when interpreted only in terms of peak heights, it is remains uncertain what these organic matter (OM) fractions represent chemically or how one could extract them).
+In a recent study, we have shown that the models used to estimate holocellulose and Klason lignin contents in @Hodgkins.2018 (original models) are not valid for peat and this will cause larger uncertainties and biased predictions (uncertainty source 1) --- especially for decomposed peat --- of the estimated holocellulose and Klason lignin contents [@Teickner.2022f].
 
-Such a qualitative interpretation of MIRS enables us to reinterpret @Hodgkins.2018, circumventing some of the uncertainties we have uncovered: All holocellulose and Klason lignin values given in @Hodgkins.2018 are directly proportional to the heights of the `carb` and `arom15arom16` peak, respectively. This removes uncertainties due to invalid spectral prediction models from the analyses. Then, we can still say that @Hodgkins.2018 show systematic latitudinal and depth-related differences in peat "carbohydrate" and "aromatics" contents.
+Besides this, the following two uncertainty sources have not been considered in @Hodgkins.2018: first, the prediction uncertainty of the spectral prediction models (uncertainty source 2), and second, the uncertainty introduced when computing near-surface average holocellulose and Klason lignin contents from estimates for individual peat layers (uncertainty source 3).
 
-The trade-offs are first, that we have to make the assumption that there are no latitudinal or depth-related differences in mineral, carbonate, and protein contents, and second, that we have to make the assumption that differences in heights of the two peaks are not dominated by differences in other peaks in the spectra. The reason is that differences in peak heights can be attributed to "carbohydrates" or "aromatics" only when contents of minerals or proteins and carbonates, respectively, are the same, and when changes in the area normalized height of these peaks are not caused by changes in other peaks, which can be an effect of spectral normalization [@Stuart.2004; @Tatzber.2007; @Hodgkins.2018; @Teickner.2022f].
+We recomputed the models for the latitudinal gradients of near-surface peat holocellulose and Klason lignin contents while considering all three uncertainty sources (supporting information S1). 
 
-We think that only some of these assumptions can are supported at the moment. The `carb` peak is comparatively large and has low interferences with peaks caused by other molecular structures. It should therefore be a good indicator for "carbohydrates" because mineral contents in (near-surface) peat are typically low (as validated by @Hodgkins.2018). The `arom15arom16` peak has large contributions by proteins [@Stuart.2004; @Teickner.2022f], based on peat N contents, it is not unlikely that peat protein contents differ with depth and latitude [@Sowden.1978; @Loisel.2014], and it may be more affected by other peaks since it is smaller than the `carb` peak. For this reason, we suggest that more evaluation is necessary before accepting, based on @Hodgkins.2018, that there are systematic differences in peat "aromatic" contents.  
+Since we do not have yet models to accurately predict peat holocellulose and Klason lignin contents from MIRS, it is of course difficult to quantify the uncertainty and bias introduced by uncertainty source 1. However, the modified models provided in @Teickner.2022f are very likely more accurate and therefore the difference between predictions of the original model and our modified models are a plausible approximation of this additional uncertainty and bias. 
 
-The reinterpretation in terms of "carbohydrate" and "aromatics" instead of holocellulose and Klason lignin has the clear disadvantage that we sacrifice the quantitative precision @Hodgkins.2018 aimed to attribute to the results: it is much more informative to precisely estimate a change in Klason lignin content of e.g. 5 mass-% when the average annual temperature increase by 1$^{\circ}$C than to only make qualitative statements that the relative amount of "aromatics" (without describing in detail what this OM fraction means) increases. 
+The reanalysis shows that both the estimated slopes for the latitudinal gradient (95% confidence intervals are [`r s1_res_holocellulose %>% dplyr::pull(b_latitude) %>% quantile(probs = c(0.025, 0.975)) %>% round(1) %>% paste0(collapse = ",")`] and [`r s1_res_klason_lignin %>% dplyr::pull(b_latitude) %>% quantile(probs = c(0.025, 0.975)) %>% round(1) %>% paste0(collapse = ",")`] for holocellulose and Klason lignin, respectively; figure \@ref(fig:reply-res-p-sites-latitude) and supporting figure 3<!---\@ref(fig:reply-res-p-latitude-poc-slope)--->) and differences in the depth profiles are highly uncertain due to these uncertainty sources (figure \@ref(fig:reply-res-p-depth-profiles-latitude)). 
 
-We think @Hodgkins.2018 have advanced a very important idea to make the interpretation of MIRS more quantitative. Only with such a quantitative approach, which links different types of measurements and the knowledge we have about them, can we develop a quantitatively precise understanding. However, we have shown that there is some more way to go. We hope that our critical analysis will help to improve this approach.
+Thus, our reanalysis shows that estimates of the latitudinal gradient and depth gradients are much more uncertain than previously assumed.  
 
 (ref:reply-res-p-sites-latitude-caption) Predicted average surface ($\le 50$ cm) peat holocellulose (a) and Klason lignin (b) contents plotted against latitude (compare with Fig. 3 in @Hodgkins.2018). Lines and shaded areas represent average predictions from regression models and 95% confidence intervals. "Modified" is the modified Bayesian hierarchical regression model which simultaneously models individual samples' contents from mid infrared spectra and the latitudinal gradient of average core near-surface peat contents. This model considers prediction uncertainty from the mid infrared spectra and from computing per-core averages. "Original" is the original linear regression model [@Hodgkins.2018] computing only the latitudinal gradient of average core near-surface contents. This model does not consider prediction uncertainty from mid infrared spectra, nor uncertainty from computing per-core averages. Points are average core near-surface contents predicted from the model ("Modified") or computed from the average predictions for individual samples ("Original") with error bars representing 95% confidence intervals. Points for "Modified" are shifted by $+0.1^\circ$.
 
@@ -75,9 +72,46 @@ p_poc_latitude6
 p_depth_profiles_latitude
 ```
 
-```{r reply-res-p-veg-peat-differnece, echo=FALSE, eval=FALSE, out.width="90%", fig.height=3.5, fig.width=7.5, fig.cap='Predicted surface ($\\le 50$ cm) peat and vegetation median holocellulose (A) and Klason lignin (B) contents for the peat cores shown in figure \\ref{fig:res-p-gaussian-beta-depth-profile-best} grouped according to \\cite{Hodgkins.2018}. Predictions of the (biased) original models are equivalent to the data shown in \\cite{Hodgkins.2018} (figure 5). Averages are median values of predictions, error bars are 95\\% prediction intervals. "Difference" is the difference between predictions for vegetation and peat.'}
-p_veg_peat_difference
-```
+# Larger aromatic contents may be necessary to stabilize tropical near-surface peat against decomposition {.unnumbered}
+
+Our previous study has shown that in particular the spectral prediction model for Klason lignin is biased, especially for more decomposed peat [@Teickner.2022f]. Our reanalysis using the modified model for Klason lignin from @Teickner.2022f thus indicates that larger Klason lignin contents may be necessary to stabilize tropical near-surface peat against decomposition as well as that changes in Klason lignin with depth may be more pronounced in the tropics than estimated in @Hodgkins.2018 (supporting information S1).
+
+With our modified model, near-surface peat Klason lignin contents are on average ~10 to 15 mass-% larger across the latitudinal gradient (figure \@ref(fig:reply-res-p-sites-latitude)). Specifically, average (sub)tropical ($<45 ^\circ$N) near-surface peat Klason lignin contents are `r d_peat_pred_best_diff_mean %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude & surface_peat) %>% dplyr::pull(y_hat_diff) %>% median() %>% magrittr::multiply_by(100) %>% round(0)` [`r d_peat_pred_best_diff_mean %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude & surface_peat) %>% dplyr::pull(y_hat_diff) %>% quantile(probs = c(0.025, 0.975)) %>% magrittr::multiply_by(100) %>% round(0) %>% paste(collapse = ",")`] mass-% (median, lower and upper 95% prediction interval limit) larger than with the original model. The large uncertainties now made explicit would also allow on average larger differences between deep (sub)tropical ($<45 ^\circ$N) and high-latitude ($\ge45 ^\circ$N) peat (figure \@ref(fig:reply-res-p-depth-profiles-latitude)).
+
+Similarly, residual enrichment of Klason lignin during decomposition may have been underestimated. A rough estimate for the residual enrichment of Klason lignin during decomposition is the difference in Klason lignin content between near-surface peat and deeper peat. With the modified model, this difference is on average for (sub)tropical peatlands `r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude) %>% dplyr::pull(res) %>% median() %>% magrittr::multiply_by(100) %>% round(0)` [`r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & !high_latitude) %>% dplyr::pull(res) %>% quantile(probs = c(0.025, 0.975)) %>% magrittr::multiply_by(100) %>% round(0) %>% paste(collapse = ",")`] mass-% larger (figure \@ref(fig:reply-res-p-depth-profiles-latitude)). For high latitude peatlands the difference is smaller and much more uncertain than previously stated (`r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & high_latitude) %>% dplyr::pull(res) %>% median() %>% magrittr::multiply_by(100) %>% round(0)` [`r d_peat_pred_best_diff_mean1 %>% dplyr::mutate(res = y_hat_diff - y_hat_or_diff) %>% dplyr::filter(variable_y == "Klason lignin" & high_latitude) %>% dplyr::pull(res) %>% quantile(probs = c(0.025, 0.975)) %>% magrittr::multiply_by(100) %>% round(0) %>% paste(collapse = ",")`] mass-%).  
+
+Consequently, in general --- and especially in (sub)tropical peatlands --- the average residual enrichment of Klason lignin due to decomposition probably has been underestimated by the original model. A consequence of this in light of climate change is that high latitude peat deposits may be even more prone to shifts in decomposition rates than suggested in @Hodgkins.2018. 
+
+
+# The need to use precise concepts for organic matter fractions {.unnumbered}
+
+We argue that we should differentiate between vague concepts such as carbohydrates and aromatics and precise concepts such as holocellulose and Klason lignin and we should always use the most precise concept possible, unless more general statements are explicitly warranted.
+
+For example, limitations of the extraction procedure by which holocellulose and Klason lignin are defined are known (e.g., @Hatfield.2005, @Bunzel.2011, @Abu-Omar.2021) and these limitations as well as differences to other procedures get obscured by using vague words such as carbohydrates and aromatics.
+
+Using precise concepts for organic matter fractions becomes especially important when interpreting peat chemistry based on mid infrared spectra (MIRS) or spectral prediction models because all variables derived from MIRS --- for example the widely used humification indices, as proxy for relative contents of recalcitrant organic matter fractions (e.g. @Broder.2012), or Klason lignin contents predicted from models --- are really only indirect estimates of organic matter fractions and there are abundant possibilities how they can be misleading if they are not sufficiently validated.
+
+Intensities recorded in MIRS really only represent the fraction of the incident infrared radiation which is absorbed by specific molecular structures which happen to absorb at that specific energy level [@Stuart.2004]. Such molecular structures may for example be aromatic C=C bonds, C-N bonds in amides, or C-O bonds in alcohols (e.g. carbohydrates) [@Stuart.2004]. In addition, absorption of infrared radiation (and hence peak heights) can be decoupled from abundances of molecular structures because also the electronegativity of the bonds controls absorption of mid infrared radiation [@Stuart.2004].
+
+One major reason why the model for Klason lignin in @Hodgkins.2018 is biased and invalid for peat is that the only predictor variable used in this model, `arom15arom16`, is not a good indicator for Klason lignin because also proteins can absorb in the same energy range [@Stuart.2004] and therefore, estimates are biased relative to the amount of proteins in the samples [@Teickner.2022f]. Therefore, we should interpret `arom15arom16` and similar variables, such as specific humification indices (HI$_{1630/1090}$, HI$_{1510/1090}$) only then as good proxies for aromatics if we have shown that protein contents do not differ much between the peat samples (thresholds which still needs to be established). 
+
+In all other cases, we should be precise in our wording by calling the variable `arom15arom16` to signal that this variable may be no good indicator for aromatics if it is confounded by proteins. Obviously, this recommendation equally applies to all other variables derived from MIRS.
+
+@Hodgkins.2018 have made an important first step to actually quantify holocellulose and Klason lignin contents, i.e. specific concepts of carbohydrates and aromatics, from MIRS and this is an important improvement over the qualitative interpretation of peak heights or peak ratios (such as humification indices) used in the past (e.g. @Cocozza.2003, @Broder.2012, @Tfaily.2014). Using precise words for what we have actually measured and what confounds we have considered is important to assure that this first step will actually be an improvement over the qualitative interpretation of MIRS.
+
+
+# Conclusions {.unnumbered}
+
+Our reanalysis of @Hodgkins.2018, taking into account previously unconsidered sources of uncertainties, shows that:
+
+1. Larger aromatic contents may be necessary to stabilize tropical near-surface peat against decomposition and aromatics may accumulate at a higher rate with depth in tropical peatlands than estimated by @Hodgkis.2018.
+
+2. Larger uncertainties indicate that also larger differences in aromatic contents between (sub)tropical and high latitude peat than estimated by @Hodgkins.2018 are possible, also between deeper peat.
+
+3. More research should focus on how estimates of carbohydrate and aromatic contents from MIRS may be confounded by other organic matter fractions, in particular proteins. As a first step, this requires accurate concepts to name organic matter fractions and variables used in the interpretation of MIRS.
+
+The results of this reanalysis also apply to a more recent extension of @Hodgkins.2018 with a larger dataset [@Verbeke.2022].
+
 
 # Acknowledgements {.unnumbered}
 
@@ -94,3 +128,72 @@ HT performed the calculations, prepared the figures, and wrote the original text
 # Data and Code availability {.unnumbered}
 
 Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.6325760.>
+
+```{r reply-res-p-veg-peat-differnece, echo=FALSE, eval=FALSE, out.width="90%", fig.height=3.5, fig.width=7.5, fig.cap='Predicted surface ($\\le 50$ cm) peat and vegetation median holocellulose (A) and Klason lignin (B) contents for the peat cores shown in figure \\ref{fig:res-p-gaussian-beta-depth-profile-best} grouped according to \\cite{Hodgkins.2018}. Predictions of the (biased) original models are equivalent to the data shown in \\cite{Hodgkins.2018} (figure 5). Averages are median values of predictions, error bars are 95\\% prediction intervals. "Difference" is the difference between predictions for vegetation and peat.'}
+p_veg_peat_difference
+```
+
+
+
+
+
+<!--
+# On the responsible interpretation of peat mid infrared spectra (mid-IR, MIR, FTIR)
+
+Mid infrared spectra (MIRS, also known as mid-IR, FTIR) of peat are a source of vast information on peat chemistry. Not only can they be used to predict other peat properties, but also to trace changes in individual molecular structures. However, the way from a mid infrared spectrum to a correct inference about peat chemistry is riddled by many pitfalls which often are not appropriately handled. 
+
+Here, we list common pitfalls, illustrate them with examples, describe their consequences, and show how to avoid them. Our exposition is specifically directed to scientists who have already very basic knowledge of MIRS, but are uncertain about possible errors during the interpretation of MIRS.
+
+We do not list examples to point at other's mistakes (we have our own mistakes [---todo:ref]), but to provide accessible examples which underline how common some of the pitfalls are. Through the use of examples, we also want to increase awareness for the grave consequences which the misinterpretation of MIRS has for our understanding of peat chemistry and processes.
+
+
+## Pitfall 1: Ignoring alternative molecular structures which contribute to a peak
+
+The peak around 1620 cm$^{-1}$ is often identified as indicator of aromatics [---todo:ref]. Even though this is true, one should be aware that proteins also contribute to this peak. Now, you may think that proteins have such a small abundance in peat in comparison to aromatics that their contribution to this peak can be safely ignored. The problem is that the contribution of a molecular structure to a MIRS peak is not only controlled by its abundance, but also by its electronegativity: more electronegative bonds absorb more infrared radiation than less electronegative bonds, and thus contribute more to a peak. Aromatics contribute to the 1620 cm$^{-1}$ peak via a relatively unpolarized C=C bond, proteins via the much more electronegative N-H [---todo:check] bond. Thus, even though proteins have a much smaller abundance in peat than aromatics, the electronegativity of their N-H bond makes them a dominant contributor to the 1620 cm$^{-1}$ peak. 
+
+
+More generally, peaks in peat MIRS almost never can be identified with only one molecular structure: typically, more than one molecular structure absorbs infrared radiation in one region of a spectrum. Even more, we are mostly agnostic on the relative abundances and interrelations of these molecular structures. On the one hand this certainly makes it hard to provide a plausible and concrete interpretation of MIRS peaks. On the other hand, it makes it too easy to accidentally focus on just the molecular structures we certainly know to contribute to a peak or which have been reported in previous studies.
+
+
+What are potential consequences of this pitfall? In the worst case, you'll assume that a wrong molecular structure changed in abundance. In any case, inappropriate consideration of alternative molecular structures will weaken the point you want to make because there are possible alternative causes for a change in a peak which you have not actively ruled out. 
+
+How common is this pitfall? We focus here on the introductory example of the 1620 cm$^{-1}$ peak: an erroneous interpretation is always made when this peak is attributed exclusively to proteins or aromatics, without explaining why the respective other molecular structure could not have affected the peak. 
+
+
+How can this pitfall be avoided? The first best step to avoid this pitfall is to use large databases where molecular structures common in any natural organic matter are assigned to peaks for the interpretation of MIRS. Considering how common this pitfall is, interpretation of MIRS should never be based on just a few studies and without more general literature on MIRS, e.g. textbooks. We have compiled such a database from general and more specific literature. This database is accessible from the 'irpeat' R package. In addition, we recommend other tools with more broad focus [---todo:ref spectroscopy and fun].
+
+The second best step to avoid this pitfall can be applied when you have sufficient evidence that some molecular structure did not contribute to a peak. For example, consider that you made separate protein measurements and found that protein content does barely change between treatments of some experiment you analyze. Then (and only then), it is appropriate to label the 1620 cm$^{-1}$ peak "aromatic peak". Explaining and justifying why some molecular structures can  be neglected makes this decision transparent.
+
+## Pitfall 3: Confounding molecular structures with organic matter fractions
+
+
+## Pitfall 2: Not considering how spectral normalization affects peaks
+
+Spectral normalization is a heuristic procedure which modifies the intensity values of spectra to get rid of differences between spectra which are not caused by the analyzed sample, but for example by sensor settings, or differences in sample materials if only relative changes are interpreted. Common spectral normalization procedures are for example to divide all intensity values by the intensity of a specific peak (this is the basis for so-called humification indices; for peat, inensities are most often normalized to (= divided by) the intensity around 1090 cm$^{-1}$ to analyze the change in a molecular structure relative to carbohydrates [---todo:ref]), by the sum of all intensity values (e.g. ...), or by the vector norm (vector normalization). Since this is a heuristic procedure, different normalizations are appropriate for different tasks.
+
+Consequences of normalization:
+
++ Intensity changes in a peak can only be interpreted relative to changes in the intensity to which the spectra was normalized.
+
+
+## Pitfall 3: Analyzing peat chemistry with invalid or untested spectral prediction models without being critical
+
+Because MIRS contain so much information on peat chemistry, they can be used to predict many other peat properties. This makes spectral prediction models both very resource efficient tools to estimate several peat properties and devices to interpret spectra (by interpreting model coefficients).
+
+Spectral prediction models typically depend on many predictor variables (independent variables), first because of the normalization which makes variables included as predictor in a model also dependent on variables not included in the model (see pitfall 2), and second because many spectral prediction models use many peaks (or other variables derived from MIRS) to make predictions. Using many variables increases the risk of overfitting --- the phenomenon that a model fits the training datawell, but not new data --- and therefore such models need more and more diverse testing data to be validated. Spectral prediction models for peat MIRS are not new [---todo:ref], but well tested spectral prediction models for peat do not exist yet. 
+
+In particular, one common pitfall is to use spectral prediction models on MIRS for which the model extrapolates. Extrapolating with high-dimensional data is particularly risky because of the increased overfitting risk and should therefore be avoided. Extrapolating also includes using a model trained on foreign data not representative for peat to make predictions for peat samples. Using such models can cause strongly biased predictions and underestimation of prediction uncertainties.
+
+To give a concrete example: @Hodgkins.2018 developed a model to predict peat holocellulose (as a proxy for carbohydrates) and Klason lignin (as a proxy for aromatics) contents by using a diverse set of wood, grass, leaves, and paper product samples. The MIRS have several properties which differ from peat and cause biased predictions. In particular, Klason lignin contents are strongly underestimated [---todo:ref]. As a consequence, applying these models considerably underestimates peat Klason lignin contents and in any case introduces an unknown, but certainly not negligible, amount of uncertainty in any inference drawn based on these models. Sadly, these models have been misapplied frequently in the past, including by us [---todo:ref] and the conclusions of all these studies which are based on the models are on shaky ground.
+
+To avoid this pitfall, you have to check that the model you want to use is representative for you data and does not extrapolate for your data. Whilst it is difficult to fully check whether a model is representative for your data, a good indication for this is that it was computed with MIRS from samples which are similar to your samples (i.e., if you want to make predictions for peat, use a model which was computed with MIRS from peat). You can check that a model does not extrapolate by computing its prediction domain. The prediction domain of a model is the range of the predictor variable values of the MIRS used to compute the model. Ideally, researchers who provide prediction models would also include code/tools to easily perform these checks.
+
+
+
+
+## Pitfall 4: Neglecting uncertainties of spectral prediction models
+
+
+Spectral prediction models are no magic and often have relatively large prediction uncertainties. For instance
+-->
+
