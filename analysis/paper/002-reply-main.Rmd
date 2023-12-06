@@ -19,15 +19,6 @@ header-includes:
      \vspace{5ex}}
    - \posttitle{\end{center}}
 fontsize: 12pt
-abstract:  |  
-   \noindent @Hodgkins.2018 used mid infrared spectra (MIRS) to make inferences about the stability of peat against decomposition along a latitudinal gradient from the tropics to northern latitudes. Recently, we have shown that these spectral prediction models are biased and their predictions more uncertain than considered in @Hodgkins.2018 [@Teickner.2022f]. Here, we show what consequences this bias and uncertainty and additional neglected uncertainty sources have for the main conclusions in @Hodgkins.2018.  
-   In particular, we find that:  
-
-      1. Larger aromatic contents may be necessary to stabilize tropical near-surface peat against decomposition and aromatics may accumulate at a higher rate with depth in tropical peatlands than estimated by @Hodgkins.2018.
-
-      2. Larger uncertainties indicate that also larger differences in aromatic contents between (sub)tropical and high latitude peat than estimated by @Hodgkins.2018 are possible, also between deeper peat.
-
-      3. More research should focus on how estimates of carbohydrate and aromatic contents from MIRS may be confounded by other organic matter fractions, in particular proteins. As a first step, this requires accurate concepts to name organic matter fractions and variables used in the interpretation of MIRS.
 ---
 
 ```{r setup-reply-2, include=FALSE}
