@@ -137,7 +137,7 @@ HT performed the calculations, prepared the figures, and wrote the original text
 
 # Data and Code availability {.unnumbered}
 
-Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.6325760>.
+Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.10276230> [@Teickner.2023a].
 
 
 # References {.unnumbered}
