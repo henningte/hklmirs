@@ -5,18 +5,29 @@ date: ""
 output: 
   bookdown::pdf_book:
     keep_tex: true
-    citation_package: natbib
     toc: false
-bibliography: references
-biblio-style: unsrtnat
-natbiboptions: super
+bibliography: references.bib
 header-includes:
    - \usepackage{float}
    - \usepackage{lineno}
    - \linenumbers
    - \usepackage{setspace}
    - \doublespacing
+   - \usepackage{titling}
+   - \pretitle{\begin{center}
+     \bf{This manuscript is a non-peer reviewed preprint submitted to EarthArXiv. It has not been submitted for publication to a journal yet.} \LARGE\\
+     \vspace{5ex}}
+   - \posttitle{\end{center}}
 fontsize: 12pt
+abstract:  |  
+   \noindent @Hodgkins.2018 used mid infrared spectra (MIRS) to make inferences about the stability of peat against decomposition along a latitudinal gradient from the tropics to northern latitudes. Recently, we have shown that these spectral prediction models are biased and their predictions more uncertain than considered in @Hodgkins.2018 [@Teickner.2022f]. Here, we show what consequences this bias and uncertainty and additional neglected uncertainty sources have for the main conclusions in @Hodgkins.2018.  
+   In particular, we find that:  
+
+      1. Larger aromatic contents may be necessary to stabilize tropical near-surface peat against decomposition and aromatics may accumulate at a higher rate with depth in tropical peatlands than estimated by @Hodgkins.2018.
+
+      2. Larger uncertainties indicate that also larger differences in aromatic contents between (sub)tropical and high latitude peat than estimated by @Hodgkins.2018 are possible, also between deeper peat.
+
+      3. More research should focus on how estimates of carbohydrate and aromatic contents from MIRS may be confounded by other organic matter fractions, in particular proteins. As a first step, this requires accurate concepts to name organic matter fractions and variables used in the interpretation of MIRS.
 ---
 
 ```{r setup-reply-2, include=FALSE}
@@ -28,6 +39,10 @@ knitr::opts_chunk$set(fig.align = "center",
 
 $^1$ ILÖK, Ecohydrology and Biogeochemistry Group, University of Münster, Heisenbergstr. 2, 48149 Münster, Germany  
 $^*$ Corresponding author: Henning Teickner (henning.teickner@uni-muenster.de)  
+ 
+\newpage
+
+# Introduction {.unnumbered}
  
 @Hodgkins.2018 used mid infrared spectra (MIRS) to make inferences about the stability of peat against decomposition along a latitudinal gradient from the tropics to northern latitudes. Recently, we have shown that these spectral prediction models are biased and their predictions more uncertain than considered in @Hodgkins.2018 [@Teickner.2022f]. Here, we show what consequences this bias and uncertainty and additional neglected uncertainty sources have for the main conclusions in @Hodgkins.2018.
 
@@ -113,6 +128,10 @@ Our reanalysis of @Hodgkins.2018, taking into account previously unconsidered so
 The results of this reanalysis also apply to a more recent extension of @Hodgkins.2018 with a larger dataset [@Verbeke.2022].
 
 
+# Supporting information {.unnumbered}
+
+Supporting information S1 is available as appendix to this manuscript.
+
 # Acknowledgements {.unnumbered}
 
 We like to thank Jeffrey Chanton and Suzanne Hodgkins for a constructive discussion which greatly helped to improve a first version of this manuscript. This study was funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) grant no. KN 929/23-1 to Klaus-Holger Knorr and grant no. PE 1632/18-1 to Edzer Pebesma.
@@ -127,73 +146,7 @@ HT performed the calculations, prepared the figures, and wrote the original text
 
 # Data and Code availability {.unnumbered}
 
-Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.6325760.>
-
-```{r reply-res-p-veg-peat-differnece, echo=FALSE, eval=FALSE, out.width="90%", fig.height=3.5, fig.width=7.5, fig.cap='Predicted surface ($\\le 50$ cm) peat and vegetation median holocellulose (A) and Klason lignin (B) contents for the peat cores shown in figure \\ref{fig:res-p-gaussian-beta-depth-profile-best} grouped according to \\cite{Hodgkins.2018}. Predictions of the (biased) original models are equivalent to the data shown in \\cite{Hodgkins.2018} (figure 5). Averages are median values of predictions, error bars are 95\\% prediction intervals. "Difference" is the difference between predictions for vegetation and peat.'}
-p_veg_peat_difference
-```
+Data and code to reproduce our analyses are available via <https://doi.org/10.5281/zenodo.6325760>.
 
 
-
-
-
-<!--
-# On the responsible interpretation of peat mid infrared spectra (mid-IR, MIR, FTIR)
-
-Mid infrared spectra (MIRS, also known as mid-IR, FTIR) of peat are a source of vast information on peat chemistry. Not only can they be used to predict other peat properties, but also to trace changes in individual molecular structures. However, the way from a mid infrared spectrum to a correct inference about peat chemistry is riddled by many pitfalls which often are not appropriately handled. 
-
-Here, we list common pitfalls, illustrate them with examples, describe their consequences, and show how to avoid them. Our exposition is specifically directed to scientists who have already very basic knowledge of MIRS, but are uncertain about possible errors during the interpretation of MIRS.
-
-We do not list examples to point at other's mistakes (we have our own mistakes [---todo:ref]), but to provide accessible examples which underline how common some of the pitfalls are. Through the use of examples, we also want to increase awareness for the grave consequences which the misinterpretation of MIRS has for our understanding of peat chemistry and processes.
-
-
-## Pitfall 1: Ignoring alternative molecular structures which contribute to a peak
-
-The peak around 1620 cm$^{-1}$ is often identified as indicator of aromatics [---todo:ref]. Even though this is true, one should be aware that proteins also contribute to this peak. Now, you may think that proteins have such a small abundance in peat in comparison to aromatics that their contribution to this peak can be safely ignored. The problem is that the contribution of a molecular structure to a MIRS peak is not only controlled by its abundance, but also by its electronegativity: more electronegative bonds absorb more infrared radiation than less electronegative bonds, and thus contribute more to a peak. Aromatics contribute to the 1620 cm$^{-1}$ peak via a relatively unpolarized C=C bond, proteins via the much more electronegative N-H [---todo:check] bond. Thus, even though proteins have a much smaller abundance in peat than aromatics, the electronegativity of their N-H bond makes them a dominant contributor to the 1620 cm$^{-1}$ peak. 
-
-
-More generally, peaks in peat MIRS almost never can be identified with only one molecular structure: typically, more than one molecular structure absorbs infrared radiation in one region of a spectrum. Even more, we are mostly agnostic on the relative abundances and interrelations of these molecular structures. On the one hand this certainly makes it hard to provide a plausible and concrete interpretation of MIRS peaks. On the other hand, it makes it too easy to accidentally focus on just the molecular structures we certainly know to contribute to a peak or which have been reported in previous studies.
-
-
-What are potential consequences of this pitfall? In the worst case, you'll assume that a wrong molecular structure changed in abundance. In any case, inappropriate consideration of alternative molecular structures will weaken the point you want to make because there are possible alternative causes for a change in a peak which you have not actively ruled out. 
-
-How common is this pitfall? We focus here on the introductory example of the 1620 cm$^{-1}$ peak: an erroneous interpretation is always made when this peak is attributed exclusively to proteins or aromatics, without explaining why the respective other molecular structure could not have affected the peak. 
-
-
-How can this pitfall be avoided? The first best step to avoid this pitfall is to use large databases where molecular structures common in any natural organic matter are assigned to peaks for the interpretation of MIRS. Considering how common this pitfall is, interpretation of MIRS should never be based on just a few studies and without more general literature on MIRS, e.g. textbooks. We have compiled such a database from general and more specific literature. This database is accessible from the 'irpeat' R package. In addition, we recommend other tools with more broad focus [---todo:ref spectroscopy and fun].
-
-The second best step to avoid this pitfall can be applied when you have sufficient evidence that some molecular structure did not contribute to a peak. For example, consider that you made separate protein measurements and found that protein content does barely change between treatments of some experiment you analyze. Then (and only then), it is appropriate to label the 1620 cm$^{-1}$ peak "aromatic peak". Explaining and justifying why some molecular structures can  be neglected makes this decision transparent.
-
-## Pitfall 3: Confounding molecular structures with organic matter fractions
-
-
-## Pitfall 2: Not considering how spectral normalization affects peaks
-
-Spectral normalization is a heuristic procedure which modifies the intensity values of spectra to get rid of differences between spectra which are not caused by the analyzed sample, but for example by sensor settings, or differences in sample materials if only relative changes are interpreted. Common spectral normalization procedures are for example to divide all intensity values by the intensity of a specific peak (this is the basis for so-called humification indices; for peat, inensities are most often normalized to (= divided by) the intensity around 1090 cm$^{-1}$ to analyze the change in a molecular structure relative to carbohydrates [---todo:ref]), by the sum of all intensity values (e.g. ...), or by the vector norm (vector normalization). Since this is a heuristic procedure, different normalizations are appropriate for different tasks.
-
-Consequences of normalization:
-
-+ Intensity changes in a peak can only be interpreted relative to changes in the intensity to which the spectra was normalized.
-
-
-## Pitfall 3: Analyzing peat chemistry with invalid or untested spectral prediction models without being critical
-
-Because MIRS contain so much information on peat chemistry, they can be used to predict many other peat properties. This makes spectral prediction models both very resource efficient tools to estimate several peat properties and devices to interpret spectra (by interpreting model coefficients).
-
-Spectral prediction models typically depend on many predictor variables (independent variables), first because of the normalization which makes variables included as predictor in a model also dependent on variables not included in the model (see pitfall 2), and second because many spectral prediction models use many peaks (or other variables derived from MIRS) to make predictions. Using many variables increases the risk of overfitting --- the phenomenon that a model fits the training datawell, but not new data --- and therefore such models need more and more diverse testing data to be validated. Spectral prediction models for peat MIRS are not new [---todo:ref], but well tested spectral prediction models for peat do not exist yet. 
-
-In particular, one common pitfall is to use spectral prediction models on MIRS for which the model extrapolates. Extrapolating with high-dimensional data is particularly risky because of the increased overfitting risk and should therefore be avoided. Extrapolating also includes using a model trained on foreign data not representative for peat to make predictions for peat samples. Using such models can cause strongly biased predictions and underestimation of prediction uncertainties.
-
-To give a concrete example: @Hodgkins.2018 developed a model to predict peat holocellulose (as a proxy for carbohydrates) and Klason lignin (as a proxy for aromatics) contents by using a diverse set of wood, grass, leaves, and paper product samples. The MIRS have several properties which differ from peat and cause biased predictions. In particular, Klason lignin contents are strongly underestimated [---todo:ref]. As a consequence, applying these models considerably underestimates peat Klason lignin contents and in any case introduces an unknown, but certainly not negligible, amount of uncertainty in any inference drawn based on these models. Sadly, these models have been misapplied frequently in the past, including by us [---todo:ref] and the conclusions of all these studies which are based on the models are on shaky ground.
-
-To avoid this pitfall, you have to check that the model you want to use is representative for you data and does not extrapolate for your data. Whilst it is difficult to fully check whether a model is representative for your data, a good indication for this is that it was computed with MIRS from samples which are similar to your samples (i.e., if you want to make predictions for peat, use a model which was computed with MIRS from peat). You can check that a model does not extrapolate by computing its prediction domain. The prediction domain of a model is the range of the predictor variable values of the MIRS used to compute the model. Ideally, researchers who provide prediction models would also include code/tools to easily perform these checks.
-
-
-
-
-## Pitfall 4: Neglecting uncertainties of spectral prediction models
-
-
-Spectral prediction models are no magic and often have relatively large prediction uncertainties. For instance
--->
-
+# References {.unnumbered}

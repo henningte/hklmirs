@@ -74,11 +74,11 @@ manuscript2$doi <-
 
 # hklmirs
 
-This repository contains the data and code for our two manuscripts (in preparation):
+This repository contains the data and code for our two manuscripts:
 
 > Henning Teickner, and Klaus-Holger Knorr (2022): _Improving Models to Predict Holocellulose and Klason Lignin Contents for Peat Soil Organic Matter with Mid-Infrared Spectra_. SOIL 8 (2): 699–715. DOI: [10.5194/soil-8-699-2022](https://doi.org/10.5194/soil-8-699-2022).
 
-> `r paste(manuscript2$authors, "(in preparation):", manuscript2$title)`
+> `r paste(manuscript2$authors, "(2023):", manuscript2$title, "Not peer-reviewed preprint.")`
 
 ### How to cite
 
@@ -99,7 +99,7 @@ The **analysis** directory contains:
     - [006-paper-m-prediction-domain.Rmd](analysis/paper/006-paper-m-prediction-domain.Rmd): Analyzes the prediction domain [@Wadoux.2021] of the original models and the modified models and identifies under which conditions models extrapolate for peat and vegetation samples from @Hodgkins.2018.
     - [007-paper-m-prediction-differences.Rmd](analysis/paper/007-paper-m-prediction-differences.Rmd): Compares predictions for the training data and the peat and vegetation data from @Hodgkins.2018 for the original models from @Hodgkins.2018 and the modified models from `004-paper-m-reduce-underfitting.Rmd`.
     - [008-paper-supplementary.Rmd](analysis/paper/008-paper-supplementary.Rmd): Computes supplementary analyses and figures for the first manuscript.
-    - [001-reply-main.Rmd](analysis/paper/001-reply-main.Rmd): This is the main script for manuscript 2. It is compiled from within `001-paper-main.Rmd` and produces the supplementary information for manuscript 2.
+    - [001-reply-main.Rmd](analysis/paper/001-reply-main.Rmd): This is the main script for manuscript 2. It is compiled from within `001-paper-main.Rmd` and produces the supplementary information S1 for manuscript 2.
     - [002-reply-main.Rmd](analysis/paper/002-reply-main.Rmd): This script produces the document for manuscript 2. It is compiled from within `001-reply-main.Rmd`.
     
 - [:file\_folder: data](/analysis/data): Data used in the analysis. Note that raw data is not stored in [:file\_folder: raw_data](/analysis/data/raw_data) (empty folder), but in [:file\_folder: /inst/extdata](/inst/extdata). [:file\_folder: derived_data](/analysis/data/derived_data) contains derived data computed from the scripts. The raw data are derived from @Hodgkins.2018.

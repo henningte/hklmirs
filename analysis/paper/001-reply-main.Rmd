@@ -1,15 +1,12 @@
 ---
-title: 'Supplementary Information to: "Comment on Hodgkins et al. (2018)"'
-author: "Henning Teickner, Klaus-Holger Knorr"
+title: 'Supplementary Information S1 to: "Comment on Hodgkins et al. (2018)"'
+author: "Henning Teickner$^{1, *}$, Klaus-Holger Knorr$^1$"
 date: ""
 output: 
   bookdown::pdf_book:
     keep_tex: true
-    citation_package: natbib
     toc: false
-bibliography: references
-biblio-style: unsrtnat
-natbiboptions: super
+bibliography: references.bib
 header-includes:
    - \usepackage{float}
    - \usepackage{lineno}
@@ -25,6 +22,10 @@ knitr::opts_chunk$set(fig.align = "center",
                       echo = FALSE,
                       cache = TRUE)
 ```
+
+
+$^1$ ILÖK, Ecohydrology and Biogeochemistry Group, University of Münster, Heisenbergstr. 2, 48149 Münster, Germany  
+$^*$ Corresponding author: Henning Teickner (henning.teickner@uni-muenster.de) 
 
 # Methods
 
@@ -911,7 +912,7 @@ p_poc_latitude5
 
 (ref:reply-res-p-latitude-poc-shrinkage-caption) Shrinkage effects of the modified models describing the latitudinal gradient ("Modified") in comparison to the modified models using the MIRS only ("Modified, only MIRS-based"). (a) Predictions of the models for individual near-surface peat samples for all collected peat cores. As comparison, also the predictions of the original model (the Bayesian formulation of the models to predict holocellulose and Klason lignin contents of @Hodgkins.2018; "Original") are displayed. Points are average predictions and error bars 95 % prediction intervals. For holocellulose, shrinkage effects are visible both for the variability within cores and the variability across cores. (b, c) Posterior predictive densities of 100 random draws of average peat core near-surface contents ($y_{rep}$) in comparison to the average contents of the peat samples predicted with the modified model using only the MIRS ($y$). Due to shrinkage, all models produce a higher density of average peat core near-surface samples with average holocellulose and Klason lignin contents. (d) Plot of individual near-surface peat sample contents predicted by the modified models using the MIRS only versus the contents predicted by the modified models describing the latitudinal gradients. Points are average predictions and error bars 95 % prediction intervals. For holocellulose, shrinkage effects for samples with larger contents are visible.
 
-```{r reply-res-p-latitude-poc-shrinkage, echo=FALSE, out.width="70%", fig.height=8.6, fig.width=6.5, fig.cap='(ref:reply-res-p-latitude-poc-shrinkage-caption)'}
+```{r reply-res-p-latitude-poc-shrinkage, echo=FALSE, out.width="60%", fig.height=8.6, fig.width=6.5, fig.cap='(ref:reply-res-p-latitude-poc-shrinkage-caption)'}
 p1 <- 
   p_poc_latitude_6_1 +
   plot_layout(guides = 'collect') &
